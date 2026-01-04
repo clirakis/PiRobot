@@ -6,6 +6,7 @@
  * Author/Date : C.B. Lirakis / 06-Jul-10
  *
  * Description :
+ * Manages all the information associated with a TCP connection. 
  *
  * Restrictions/Limitations :
  *
@@ -21,34 +22,15 @@
 /* System includes. */
 #include <iostream>
 using namespace std;
-#include <semaphore.h>
-#include <sys/resource.h>
-#include <fstream>
-#include <string>
 
-#include <stdlib.h>
-#include <math.h>
-#include <signal.h>
-#include <sys/types.h> 
-#include <time.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <netdb.h>          /* hostent struct, gethostbyname() */
-#include <arpa/inet.h>      /* inet_ntoa() to format IP address */
-#include <netinet/in.h>     /* in_addr structure */
-#include <string.h>         /* bzero */
-#include <errno.h>          /* error processing. */
+#include <cstring>         /* bzero */
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/wait.h>       /* waitpid */
-#include <time.h>
-#include <pthread.h>
-#include <limits.h>
 
 /** Local Includes. */
 #include "debug.h"
 #include "TCPConnection.hh"
+#include "CLogger.hh"
 
 TCPConnection* TCPConnection::fConnection;
 
@@ -74,6 +56,7 @@ TCPConnection* TCPConnection::fConnection;
  */
 TCPConnection::TCPConnection(int  Conn, int Listen, const char *rxaddr) 
 {
+    SET_DEBUG_STACK;
     int    rv;
     time_t now;
 
@@ -94,6 +77,7 @@ TCPConnection::TCPConnection(int  Conn, int Listen, const char *rxaddr)
     {
 	fError = ERROR_MODIFYING_ATTRIBUTES;
     }
+    SET_DEBUG_STACK;
 }
 /**
  ******************************************************************
@@ -117,10 +101,14 @@ TCPConnection::TCPConnection(int  Conn, int Listen, const char *rxaddr)
  */
 TCPConnection::~TCPConnection()
 {
+    SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+
     close(fConnection_fd);
     fIsRunning = false;
     delete fParentAddress;
-    printf("TCPConnection delete.\n");
+    pLog->LogTime("# TCPConnection delete.\n");
+    SET_DEBUG_STACK;
 }
 
 /**
@@ -214,6 +202,8 @@ long TCPConnection::Write(const void *vptr, size_t n)
  ********************************************************************/
 int TCPConnection::Read(void *data, size_t NumberBytes)
 {
+    SET_DEBUG_STACK;
+
     int            count;
     size_t         ReadCount;
     unsigned char* ReadPointer = (unsigned char *)data;
@@ -283,13 +273,16 @@ int TCPConnection::Read(void *data, size_t NumberBytes)
     }
     SET_DEBUG_STACK;
     return ReadCount;
+    SET_DEBUG_STACK;
 }
 void TCPConnection::Close(void)
 {
+    SET_DEBUG_STACK;
     close(fConnection_fd);
 }
 void TCPConnection::Done(void)
 {
+    SET_DEBUG_STACK;
     fPurpose = DISCONNECT;
     fIsRunning = false;
 }

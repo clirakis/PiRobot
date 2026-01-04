@@ -20,9 +20,6 @@
 #include <iostream>
 using namespace std;
 #include <cstring>
-#include <cstdio>
-#include <cmath>
-#include <strings.h>
 
 // Local Includes.
 #include "Commands.hh"

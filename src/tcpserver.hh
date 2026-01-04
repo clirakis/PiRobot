@@ -31,12 +31,6 @@
 	  int Run;
 	  int IsRunning;
       };
-      /*! Have the ability to change the verbosity of the reporting
-       * -1 is off
-       * 0 
-       * 1 minimal reporting. 
-       */
-      void  SetVerbose(unsigned char Level);
       /*! The actual server this should be started as a thread. 
        * The TCPConnection class should be overridden and inserted 
        * here to work in the specific

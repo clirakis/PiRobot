@@ -9,6 +9,7 @@
  * Restrictions/Limitations :
  *
  * Change Descriptions :
+ * 03-Jan-26 CBL fixing some casting
  *
  * Classification : Unclassified
  *
@@ -153,19 +154,19 @@ static void main_frame(void)
 
 void display_status(unsigned char status_code, unsigned char error_code)
 {
-    static char *Status[13] = {"Doing position fixes.",
-			      "Don't have GPS time. ",
-			      "Need initialization. ",
-			      "PDOP too hight.      ",
-			      "XXX                  ",
-			      "XXX                  ",
-			      "XXX                  ",
-			      "XXX                  ",
-			      "No usable satellites.",
-			      "Only 1 useable sat.  ",
-			      "Only 2 useable sat.  ",
-			      "Only 3 useable sat.  ",
-			      "Satellite unusuable. ",
+    static const char *Status[13] = {"Doing position fixes.",
+				     "Don't have GPS time. ",
+				     "Need initialization. ",
+				     "PDOP too hight.      ",
+				     "XXX                  ",
+				     "XXX                  ",
+				     "XXX                  ",
+				     "XXX                  ",
+				     "No usable satellites.",
+				     "Only 1 useable sat.  ",
+				     "Only 2 useable sat.  ",
+				     "Only 3 useable sat.  ",
+				     "Satellite unusuable. ",
     };
     char Error[32];
 
@@ -365,7 +366,8 @@ void display_position(double lat, double lon, double alt, double bias, float tim
 void display_connection( int number, const char *add, int Purpose)
 {
     int row, col;
-    static char* cPurpose[5] = {"NONE    ","COMMAND ","POSITION","ATTITUDE ","DISCONNECT"};
+    static const char* cPurpose[5] = 
+	{"NONE    ","COMMAND ","POSITION","ATTITUDE ","DISCONNECT"};
 
     row = STATUS_AREA + number%4;
     col = LEFT_AREA;
@@ -383,7 +385,7 @@ void display_connection( int number, const char *add, int Purpose)
     wrefresh(vin);
 }
 
-void WriteMsgToScreen(char *s)
+void WriteMsgToScreen(const char *s)
 {
     static char *cp;
     static char msg[64];
@@ -393,14 +395,13 @@ void WriteMsgToScreen(char *s)
     if (n<1)
 	return;
 
-    if ((cp = strchr( s, '\r' )) != NULL)
-    {
-        *cp = '\0';
-    }
-
     /* Clear out anything that is residual. */
     memset( msg, 0x20, sizeof(msg));
     memcpy( msg, s, n);
+    if ((cp = strchr( msg, '\r' )) != NULL)
+    {
+        *cp = '\0';
+    }
 
     wmove(vin,row,2);
     row--;

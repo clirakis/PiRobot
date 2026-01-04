@@ -41,7 +41,7 @@
       void start_display(void);
       void end_display(void);
       int  checkKeys(void);
-      void WriteMsgToScreen(char *s);
+      void WriteMsgToScreen(const char *s);
       void display_message (const char *fmt, ...);
       /* Get the current display screen */
       int  CurrentScreen(void);

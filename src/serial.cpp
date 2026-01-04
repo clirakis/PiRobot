@@ -20,13 +20,6 @@
 // System includes.
 #include <iostream>
 using namespace std;
-#include <string>
-#include <cmath>
-#include <csignal>
-#include <termios.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
 
 /// Local Includes.
 #include "serial.hh"

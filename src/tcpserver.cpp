@@ -21,26 +21,14 @@
 /* System includes. */
 #include <iostream>
 using namespace std;
-#include <semaphore.h>
-#include <sys/resource.h>
-#include <fstream>
-#include <string>
+// #include <semaphore.h>
+// #include <sys/resource.h>
+// #include <fstream>
+// #include <string>
 
-#include <stdlib.h>
-#include <math.h>
-#include <signal.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
-#include <netdb.h>          /* hostent struct, gethostbyname() */
+#include <csignal>
 #include <arpa/inet.h>      /* inet_ntoa() to format IP address */
-#include <netinet/in.h>     /* in_addr structure */
-#include <string.h>         /* bzero */
-#include <errno.h>          /* error processing. */
-#include <unistd.h>
-#include <sys/wait.h>       /* waitpid */
-#include <time.h>
-#include <pthread.h>
-#include <limits.h>
+#include <cstring>         /* bzero */
 #include <fcntl.h>
 
 /** Local Includes. */
@@ -49,6 +37,7 @@ using namespace std;
 #include "TCPConnection.hh"
 #include "RSdisp.hh"
 #include "Commands.hh"
+#include "CLogger.hh"
 
 /** Global Variables. */
 
@@ -63,8 +52,29 @@ static Commands *cmd;
 const int MAX_CONNECTIONS = 4;
 static bool Connections[MAX_CONNECTIONS];
 
+/**
+ ******************************************************************
+ *
+ * Function Name : Add 
+ *
+ * Description : keep track of the connections 
+ *
+ * Inputs :
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
 static int Add(void)
 {
+    SET_DEBUG_STACK;
     int i = 0;
     while (Connections[i] && (i<MAX_CONNECTIONS)) i++;
     if (i<MAX_CONNECTIONS)
@@ -74,8 +84,29 @@ static int Add(void)
     }
     return -1;
 }
+/**
+ ******************************************************************
+ *
+ * Function Name : Delete
+ *
+ * Description : Mark the connection indicated as not connected. 
+ *
+ * Inputs :
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
 static void Delete(int i)
 {
+    SET_DEBUG_STACK;
     Connections[i] = false;
 }
 /**
@@ -100,14 +131,38 @@ static void Delete(int i)
  */
 void SetVerbose(unsigned char Level)
 {
+    SET_DEBUG_STACK;
     Verbose = Level;
 }
+/**
+ ******************************************************************
+ *
+ * Function Name : UserSignal
+ *
+ * Description : Register SIGPIPE and the action to deal with it. 
+ *
+ * Inputs :
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
 static void UserSignal(int sig)
 {
+    SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+
     switch (sig)
     {
     case SIGPIPE:
-	//*logFile << "# SIGUSR: " << sig << endl;
+	pLog->LogTime("# SIGUSR: %d\n",sig);
 	//tcpControl.Run = 0;
 	display_message("SIGPIPE.");
 	break;
@@ -137,19 +192,21 @@ static void UserSignal(int sig)
 void* ConnectionThread(void* arg)
 {
     SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+
     char     line[256];
     long     rc;
     int      rv       = 0;
     time_t   now;
     TCPConnection *Rx = (TCPConnection*) arg;
 
-    struct timespec timeout;
+    //struct timespec timeout;
     /* Seconds and microseconds timeout at 100ms */
     struct timespec sleeptime = { 0, 500000000};
 
-    if (Verbose>0)
+    if (pLog->CheckVerbose(0))
     {
-        printf("Thread %d %d\n", Rx->Connection(), Rx->GetListen());
+        pLog->LogTime("# Thread %d %d\n", Rx->Connection(), Rx->GetListen());
     }
     signal (SIGPIPE, UserSignal); 
 
