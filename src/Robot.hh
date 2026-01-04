@@ -52,7 +52,7 @@ public:
     /**
      * Tell the program to stop. 
      */
-    void Stop(void) {fRun=false;};
+    void Stop(void);
 
     /**
      * Control bits - control verbosity of output

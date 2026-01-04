@@ -71,7 +71,6 @@ Robot::Robot(const char* ConfigFile) : CObject()
 
     fRun = true;
 
-
     if(!ConfigFile)
     {
 	SetError(ENO_FILE,__LINE__);
@@ -323,3 +322,9 @@ bool Robot::WriteConfiguration(void)
     SET_DEBUG_STACK;
     return true;
 }
+void Robot::Stop(void) 
+{
+    fRun=false;
+    tcpControl.Run = 0;
+}
+

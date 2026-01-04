@@ -45,7 +45,6 @@ using namespace std;
 #define SERV_PORT 9879   /* TCP and UDP client-servers */
 #define LISTENQ   1024
 
-static int  Verbose        = -1;
 static int  listenfd;
 static Commands *cmd;
 
@@ -129,11 +128,6 @@ static void Delete(int i)
  *
  *******************************************************************
  */
-void SetVerbose(unsigned char Level)
-{
-    SET_DEBUG_STACK;
-    Verbose = Level;
-}
 /**
  ******************************************************************
  *
@@ -245,16 +239,15 @@ void* ConnectionThread(void* arg)
         if (rv == 0)
         {
             rc = Rx->Write(line, strlen(line));
-            if (Verbose>1)
+            if (pLog->CheckVerbose(1))
             {
-                cout << __FILE__<< " " 
-                     << __LINE__ << " " 
-                     << line 
-                     << " " << rc << endl;
+		pLog->LogTime("# Write rc %s %d %d %d \n",
+			      __FILE__, __LINE__, line, rc);
             }
             if (rc < 0)
             {
 		display_message("Connection closed");
+		pLog->LogTime("# Connection Closed!\n");
 		Rx->Close();
                 Rx->Stop();
             }
@@ -311,6 +304,8 @@ void* ConnectionThread(void* arg)
 void* TCP_Server(void *val)
 {
     SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+
     const int              Port = 9999;
     int			   listenfd, connfd, rv;
     socklen_t	           clilen;
@@ -324,7 +319,7 @@ void* TCP_Server(void *val)
     rv = fcntl(listenfd, F_SETFL, O_NONBLOCK);	
     if (rv == -1)
     {
-        cerr << "Error setting non-block on listen socket." << endl;
+	pLog->LogTime("# Error setting non-block on listen socket.\n");
     }
 
 
@@ -338,11 +333,11 @@ void* TCP_Server(void *val)
 
     listen(listenfd, LISTENQ);
 
-    if (Verbose > 0)
+    if (pLog->CheckVerbose(0))
     {
-        cout << "Waiting for connections on port: "
-             << Port << endl;
+        pLog->LogTime("# Waiting for connections on port: %d \n", Port);
     }
+
     while(TC->Run)
     {
         clilen = sizeof(cliaddr);
@@ -361,13 +356,11 @@ void* TCP_Server(void *val)
         }
         else
         {
-            if (Verbose>0)
+            if (pLog->CheckVerbose(0))
             {
-                cout << "Accept: " <<  __FILE__
-                     << " " <<  __LINE__
-                     << " " << connfd
-                     << " " << listenfd 
-                     << endl;
+		pLog->LogTime("# Accept: %s %d connfd: %d listenfd: %d \n",
+			      __FILE__, __LINE__, connfd, listenfd);
+		pLog->Log("# client: %s\n", inet_ntoa(cliaddr.sin_addr));
             }
 	    display_message("Connected to: %s\n", inet_ntoa(cliaddr.sin_addr));
             Control = new TCPConnection(connfd, listenfd, inet_ntoa(cliaddr.sin_addr));
@@ -375,24 +368,19 @@ void* TCP_Server(void *val)
 	    if (rv>=0)
 	    {
 		Control->SetNumber(rv);
-		if (Verbose>0)
+		if (pLog->CheckVerbose(0))
 		{
-		    cout << "Spawning thread: " 
-			 << __FILE__
-			 << " " <<  __LINE__
-			 << " " << Control->Connection()
-			 << " " << Control->GetListen()
-			 << endl;
+		    pLog->LogTime("# Spawning thread: %s %d Connection: %d, Listen: %d\n", 
+				  __FILE__, __LINE__, Control->Connection(),
+				  Control->GetListen());
 		}
 		rv = pthread_create( &rx_thread, NULL, ConnectionThread,
 				     (void *)Control);
 		if( rv == 0)
 		{
-		    if (Verbose > 0)
+		    if (pLog->CheckVerbose(0))
 		    {
-			cout << "RX Thread successfully created." 
-			     << " " <<  __FILE__ 
-			     << " " <<  __LINE__ << endl;
+			pLog->LogTime("# RX Thread successfully created.\n"); 
 		    }
 		}
 		else
@@ -404,6 +392,7 @@ void* TCP_Server(void *val)
 	    {
 		delete Control;
 		display_message("Connection count exceeded.");
+		pLog->LogTime("# ERROR - Connection count exceeded.\n");
 	    }
         }
     }
