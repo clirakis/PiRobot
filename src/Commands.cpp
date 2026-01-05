@@ -22,6 +22,7 @@ using namespace std;
 #include <cstring>
 
 // Local Includes.
+#include "debug.h"
 #include "Commands.hh"
 #include "RSdisp.hh"
 #include "Version.hh"
@@ -52,10 +53,12 @@ void Terminate(int);
  *
  *******************************************************************
  */
-Commands::Commands ()
+Commands::Commands (TCPConnection *rx)
 {
+    SET_DEBUG_STACK;
     fCommands = this;
     fRun      = true;
+    fRx       = rx;
 }
 
 /**
@@ -105,6 +108,7 @@ Commands::~Commands ()
  */
 bool Commands::Parse(const char *line)
 {
+    SET_DEBUG_STACK;
     bool rc = false; 
     display_message("PARSE %s\n", line);
     /*
@@ -124,6 +128,10 @@ bool Commands::Parse(const char *line)
 	break;
     case '@':
 	// Parse a control line for the robot. 
+	break;
+    case '?':
+	// Help dialog
+	Help();
 	break;
     }
     return rc;
@@ -166,4 +174,52 @@ bool Commands::ProgramControl(const char *line)
 	c->Write(msg, strlen(msg));
     }
     return rc;
+}
+/**
+ ******************************************************************
+ *
+ * Function Name : Commands function
+ *
+ * Description :
+ *
+ * Inputs :
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+void Commands::Help(void)
+{
+    SET_DEBUG_STACK;
+    char text[128];
+
+    snprintf( text, sizeof(text), "HELP, available commands:\n");
+    fRx->Write(text, strlen(text));
+
+    snprintf( text, sizeof(text), "$ - Parse a NMEA string - INCOMPLETE\n");
+    fRx->Write(text, strlen(text));
+
+    snprintf( text, sizeof(text), "%% - Parse a program string\n");
+    fRx->Write(text, strlen(text));
+
+    snprintf( text, sizeof(text), "%%QUIT\n");
+    fRx->Write(text, strlen(text));
+
+    snprintf( text, sizeof(text), "%%VERSION\n");
+    fRx->Write(text, strlen(text));
+
+
+    snprintf( text, sizeof(text), "@ - Robot control line, pass on to Arduino\n");
+    fRx->Write(text, strlen(text));
+
+    snprintf( text, sizeof(text), "\n");
+    fRx->Write(text, strlen(text));
+
 }

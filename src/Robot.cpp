@@ -69,7 +69,8 @@ Robot::Robot(const char* ConfigFile) : CObject()
     SetName("Robot");
     SetError(); // No error.
 
-    fRun = true;
+    fRun  = true;
+    tcpControl.Port = 9999;  // default connection port. 
 
     if(!ConfigFile)
     {
@@ -88,6 +89,7 @@ Robot::Robot(const char* ConfigFile) : CObject()
     start_display();
 
     tcpControl.Run = 1;
+
     if( pthread_create(&tcp_thread, NULL, TCP_Server,(void *)&tcpControl) == 0)
     {
 	display_message(" RX Thread successfully created.\n");
@@ -216,7 +218,7 @@ void Robot::Do(void)
 bool Robot::ReadConfiguration(void)
 {
     SET_DEBUG_STACK;
-    CLogger *Logger = CLogger::GetThis();
+    CLogger *pLog = CLogger::GetThis();
     ClearError(__LINE__);
     Config *pCFG = new Config();
 
@@ -228,13 +230,13 @@ bool Robot::ReadConfiguration(void)
     }
     catch( const FileIOException &fioex)
     {
-	Logger->LogError(__FILE__,__LINE__,'F',
+	pLog->LogError(__FILE__,__LINE__,'F',
 			 "I/O error while reading configuration file.\n");
 	return false;
     }
     catch (const ParseException &pex)
     {
-	Logger->Log("# Parse error at: %s : %d - %s\n",
+	pLog->Log("# Parse error at: %s : %d - %s\n",
 		    pex.getFile(), pex.getLine(), pex.getError());
 	return false;
     }
@@ -255,7 +257,11 @@ bool Robot::ReadConfiguration(void)
 	 */
 	const Setting &MM = root["Robot"];
 	MM.lookupValue("Debug",     Debug);
-	SetDebug(Debug);
+	MM.lookupValue("Port",      tcpControl.Port);
+	SetDebug(Debug); 
+	pLog->SetVerbose(Debug);
+	pLog->Log("# Debug value set to: %d\n", Debug);
+	pLog->Log("# Port value set to: %d\n",  tcpControl.Port);
     }
     catch(const SettingNotFoundException &nfex)
     {
@@ -291,7 +297,7 @@ bool Robot::ReadConfiguration(void)
 bool Robot::WriteConfiguration(void)
 {
     SET_DEBUG_STACK;
-    CLogger *Logger = CLogger::GetThis();
+    CLogger *pLog = CLogger::GetThis();
     ClearError(__LINE__);
     Config *pCFG = new Config();
 
@@ -300,19 +306,20 @@ bool Robot::WriteConfiguration(void)
     // USER TO FILL IN
     // Add some settings to the configuration.
     Setting &MM = root.add("Robot", Setting::TypeGroup);
-    MM.add("Debug",     Setting::TypeInt)     = 0;
+    MM.add("Debug",     Setting::TypeInt) = (int) pLog->GetVerbose();
+    MM.add("Port",      Setting::TypeInt) = tcpControl.Port;
 
     // Write out the new configuration.
     try
     {
 	pCFG->writeFile(fConfigFileName);
-	Logger->Log("# New configuration successfully written to: %s\n",
+	pLog->Log("# New configuration successfully written to: %s\n",
 		    fConfigFileName);
 
     }
     catch(const FileIOException &fioex)
     {
-	Logger->Log("# I/O error while writing file: %s \n",
+	pLog->Log("# I/O error while writing file: %s \n",
 		    fConfigFileName);
 	delete pCFG;
 	return(false);

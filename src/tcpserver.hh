@@ -30,6 +30,7 @@
       struct ThreadControl_t {
 	  int Run;
 	  int IsRunning;
+	  int Port;
       };
       /*! The actual server this should be started as a thread. 
        * The TCPConnection class should be overridden and inserted 

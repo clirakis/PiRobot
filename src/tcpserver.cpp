@@ -204,7 +204,7 @@ void* ConnectionThread(void* arg)
     }
     signal (SIGPIPE, UserSignal); 
 
-    cmd = new Commands();
+    cmd = new Commands(Rx);
 
     while( Rx->Run())
     {
@@ -306,7 +306,7 @@ void* TCP_Server(void *val)
     SET_DEBUG_STACK;
     CLogger *pLog = CLogger::GetThis();
 
-    const int              Port = 9999;
+//    const int              Port = 9999;
     int			   listenfd, connfd, rv;
     socklen_t	           clilen;
     struct sockaddr_in	   cliaddr, servaddr;
@@ -327,7 +327,7 @@ void* TCP_Server(void *val)
     servaddr.sin_family      = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     //servaddr.sin_port        = htons(SERV_PORT);
-    servaddr.sin_port        = htons(Port);
+    servaddr.sin_port        = htons(TC->Port);
 
     bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 
@@ -335,7 +335,7 @@ void* TCP_Server(void *val)
 
     if (pLog->CheckVerbose(0))
     {
-        pLog->LogTime("# Waiting for connections on port: %d \n", Port);
+        pLog->LogTime("# Waiting for connections on port: %d \n", TC->Port);
     }
 
     while(TC->Run)

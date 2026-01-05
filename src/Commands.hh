@@ -19,11 +19,14 @@
  */
 #ifndef __COMMANDS_h_
 #define __COMMANDS_h_
+
+class TCPConnection;
+
 /// Module documentation here. 
 class Commands {
 public:
     /// Default Constructor
-    Commands();
+    Commands(TCPConnection*);
     /// Default destructor
     ~Commands();
     bool Parse (const char*);
@@ -33,8 +36,10 @@ public:
 
 private:
     bool ProgramControl(const char*);
+    void Help();
 
-    bool fRun;
+    bool           fRun;
+    TCPConnection *fRx;
 
     static Commands* fCommands;
 };
