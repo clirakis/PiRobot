@@ -30,7 +30,7 @@ using namespace std;
 
 Commands* Commands::fCommands;
 
-// defined in main.cpp
+// defined in UserSignals.cpp
 void Terminate(int);
 
 /**

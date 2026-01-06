@@ -14,12 +14,17 @@
  * Classification : Unclassified
  *
  * References :
+ * 
+ * https://www.msweet.org/serial/serial.html
  *
  *******************************************************************
  */
 // System includes.
 #include <iostream>
 using namespace std;
+#include <unistd.h>
+#include <fcntl.h>
+#include <cstring>
 
 /// Local Includes.
 #include "serial.hh"

@@ -25,6 +25,7 @@ using namespace std;
 #include <cstring>
 #include <libconfig.h++>
 using namespace libconfig;
+#include <unistd.h>
 
 /// Local Includes.
 #include "Robot.hh"
@@ -33,6 +34,7 @@ using namespace libconfig;
 #include "debug.h"
 #include "RSdisp.hh"
 #include "tcpserver.hh"
+#include "serial.hh"
 
 
 Robot* Robot::fRobot;
@@ -70,7 +72,8 @@ Robot::Robot(const char* ConfigFile) : CObject()
     SetError(); // No error.
 
     fRun  = true;
-    tcpControl.Port = 9999;  // default connection port. 
+    tcpControl.Port = 9999;  // default connection port.
+    fSerialPort = "NONE"; 
 
     if(!ConfigFile)
     {
@@ -78,7 +81,7 @@ Robot::Robot(const char* ConfigFile) : CObject()
 	return;
     }
 
-    fConfigFileName = strdup(ConfigFile);
+    fConfigFileName = *ConfigFile;
     if(!ReadConfiguration())
     {
 	SetError(ECONFIG_READ_FAIL,__LINE__);
@@ -100,6 +103,13 @@ Robot::Robot(const char* ConfigFile) : CObject()
 	display_message(" RX Thread failed.\n");
 	Logger->Log("# RX Thread create failed. \n");
 	return;
+    }
+
+    /* open up the serial port to the Raspberry Pi */
+    fSerialPortFd = SerialOpen(fSerialPort.c_str(), B115200);
+    if (fSerialPortFd < 0)
+    {
+	Logger->Log("# Error opening serial port %s\n", fSerialPort.c_str());
     }
 
     Logger->Log("# Robot constructed.\n");
@@ -138,12 +148,15 @@ Robot::~Robot(void)
 	Logger->LogError(__FILE__,__LINE__, 'W', 
 			 "Failed to write config file.\n");
     }
-    free(fConfigFileName);
 
     /* Clean up */
     // Shutdown the TCP server
     tcpControl.Run = 0;
     TCPClose();
+    if (fSerialPortFd>=0)
+    {
+	close(fSerialPortFd);
+    }
     end_display();
 
     // Make sure all file streams are closed
@@ -226,7 +239,7 @@ bool Robot::ReadConfiguration(void)
      * Open the configuragtion file. 
      */
     try{
-	pCFG->readFile(fConfigFileName);
+	pCFG->readFile(fConfigFileName.c_str());
     }
     catch( const FileIOException &fioex)
     {
@@ -240,7 +253,6 @@ bool Robot::ReadConfiguration(void)
 		    pex.getFile(), pex.getLine(), pex.getError());
 	return false;
     }
-
 
     /*
      * Start at the top. 
@@ -258,6 +270,7 @@ bool Robot::ReadConfiguration(void)
 	const Setting &MM = root["Robot"];
 	MM.lookupValue("Debug",     Debug);
 	MM.lookupValue("Port",      tcpControl.Port);
+	MM.lookupValue("SerialPort", fSerialPort);
 	SetDebug(Debug); 
 	pLog->SetVerbose(Debug);
 	pLog->Log("# Debug value set to: %d\n", Debug);
@@ -308,19 +321,20 @@ bool Robot::WriteConfiguration(void)
     Setting &MM = root.add("Robot", Setting::TypeGroup);
     MM.add("Debug",     Setting::TypeInt) = (int) pLog->GetVerbose();
     MM.add("Port",      Setting::TypeInt) = tcpControl.Port;
+    MM.add("SerialPort", Setting::TypeString) = fSerialPort;
 
     // Write out the new configuration.
     try
     {
-	pCFG->writeFile(fConfigFileName);
+	pCFG->writeFile(fConfigFileName.c_str());
 	pLog->Log("# New configuration successfully written to: %s\n",
-		    fConfigFileName);
+		  fConfigFileName.c_str());
 
     }
     catch(const FileIOException &fioex)
     {
 	pLog->Log("# I/O error while writing file: %s \n",
-		    fConfigFileName);
+		  fConfigFileName.c_str());
 	delete pCFG;
 	return(false);
     }

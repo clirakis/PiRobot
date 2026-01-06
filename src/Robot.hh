@@ -20,6 +20,7 @@
  */
 #ifndef __ROBOT_hh_
 #define __ROBOT_hh_
+#  include <string>
 #  include "CObject.hh" // Base class with all kinds of intermediate
 
 class Robot : public CObject
@@ -72,8 +73,11 @@ private:
     /*! 
      * Configuration file name. 
      */
-    char   *fConfigFileName;
+    std::string   fConfigFileName;
 
+    std::string   fSerialPort;
+
+    int fSerialPortFd;
 
     /* Private functions. ==============================  */
 
