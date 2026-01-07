@@ -55,6 +55,17 @@ public:
      */
     void Stop(void);
 
+    /*!
+     * Write a value through on the serial line to the Arduino
+     */
+    size_t Write(const string &value);
+
+    /*!
+     * Read any data back from the Arduino 
+     * act or send it along to the TCP connection.
+     */
+    bool Read(string &value);
+
     /**
      * Control bits - control verbosity of output
      */

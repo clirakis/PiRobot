@@ -36,6 +36,7 @@ public:
 
 private:
     bool ProgramControl(const char*);
+    bool CommandArduino(const char* command);
     void Help();
 
     bool           fRun;

@@ -163,6 +163,84 @@ Robot::~Robot(void)
     Logger->Log("# Robot closed.\n");
     SET_DEBUG_STACK;
 }
+/**
+ ******************************************************************
+ *
+ * Function Name : Write
+ *
+ * Description : Write data to open serial port. 
+ *
+ * Inputs : string to write out. Should be text to communicate with
+ *          the system. 
+ *
+ * Returns : NONE
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+size_t Robot::Write(const string& value)
+{
+    SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+
+    if (fSerialPortFd>=0)
+    {
+	if (pLog->CheckVerbose(0))
+	{
+	    pLog->LogTime("Robot::Write %s\n", value.c_str());
+	}
+        // Returns number of bytes written. Not currently used. 
+	return write(fSerialPortFd, value.c_str(), value.length());
+    }
+    return 0;
+}
+
+/**
+ ******************************************************************
+ *
+ * Function Name : Read
+ *
+ * Description : Read any data on the open serial port. 
+ *
+ * Inputs : none
+ *
+ * Returns : NONE
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+bool Robot::Read(string& value)
+{
+    SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+    char input[256];
+    size_t rv;
+
+    if (fSerialPortFd>=0)
+    {
+	memset(input, 0, sizeof(input));
+	rv = read(fSerialPortFd, input, sizeof(input));
+	if (pLog->CheckVerbose(0))
+	{
+	    pLog->LogTime("Robot::Read %s\n", value.c_str());
+	}
+        // Returns number of bytes written. Not currently used. 
+	return (rv>0);
+    }
+    return false;
+}
 
 /**
  ******************************************************************

@@ -27,6 +27,7 @@ using namespace std;
 #include "RSdisp.hh"
 #include "Version.hh"
 #include "TCPConnection.hh"
+#include "Robot.hh"
 
 Commands* Commands::fCommands;
 
@@ -128,12 +129,14 @@ bool Commands::Parse(const char *line)
 	break;
     case '@':
 	// Parse a control line for the robot. 
+	rc = CommandArduino(&line[1]);
 	break;
     case '?':
 	// Help dialog
 	Help();
 	break;
     }
+    SET_DEBUG_STACK;
     return rc;
 }
 /**
@@ -158,6 +161,7 @@ bool Commands::Parse(const char *line)
  */
 bool Commands::ProgramControl(const char *line)
 {
+    SET_DEBUG_STACK;
     bool rc = false;
     TCPConnection *c = TCPConnection::Get();
     char msg[64];
@@ -173,7 +177,35 @@ bool Commands::ProgramControl(const char *line)
 	sprintf(msg,"Version: %d.%d\n", MAJOR_VERSION, MINOR_VERSION);
 	c->Write(msg, strlen(msg));
     }
+    SET_DEBUG_STACK;
     return rc;
+}
+/**
+ ******************************************************************
+ *
+ * Function Name : CommandsArduino
+ *
+ * Description : Send a command to the Arduino that
+ * originates from the user. 
+ *
+ * Inputs :
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+bool Commands::CommandArduino(const char *line)
+{
+    SET_DEBUG_STACK;
+    Robot *pR = Robot::GetThis();
+    return (pR->Write(line)==strlen(line));
 }
 /**
  ******************************************************************

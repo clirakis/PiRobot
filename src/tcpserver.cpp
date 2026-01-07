@@ -38,6 +38,7 @@ using namespace std;
 #include "RSdisp.hh"
 #include "Commands.hh"
 #include "CLogger.hh"
+#include "Robot.hh"
 
 /** Global Variables. */
 
@@ -186,13 +187,15 @@ static void UserSignal(int sig)
 void* ConnectionThread(void* arg)
 {
     SET_DEBUG_STACK;
-    CLogger *pLog = CLogger::GetThis();
+    TCPConnection *Rx = (TCPConnection*) arg;
+    CLogger *pLog     = CLogger::GetThis();
+    Robot   *pR       = Robot::GetThis();
 
     char     line[256];
     long     rc;
     int      rv       = 0;
     time_t   now;
-    TCPConnection *Rx = (TCPConnection*) arg;
+    string   inbound;
 
     //struct timespec timeout;
     /* Seconds and microseconds timeout at 100ms */
@@ -211,7 +214,7 @@ void* ConnectionThread(void* arg)
 	display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
 
         memset( line, 0, sizeof(line));
-        // Any inbound data?
+        // Any inbound data? ------------------------------------
         rc = Rx->Read(line, sizeof(line));
         if (rc > 0)
         {
@@ -232,18 +235,21 @@ void* ConnectionThread(void* arg)
             }
         }
 
+	// Output data ----------------------------------------
         rv = 0;
         time(&now);
         memset(line, 0, sizeof(line));
         ctime_r( &now, line);
         if (rv == 0)
         {
+	    // Send a heartbeat to the originating connection. 
             rc = Rx->Write(line, strlen(line));
             if (pLog->CheckVerbose(1))
             {
 		pLog->LogTime("# Write rc %s %d %d %d \n",
 			      __FILE__, __LINE__, line, rc);
             }
+
             if (rc < 0)
             {
 		display_message("Connection closed");
@@ -251,6 +257,18 @@ void* ConnectionThread(void* arg)
 		Rx->Close();
                 Rx->Stop();
             }
+	    /*
+	     * Any inbound traffic from the Arduino?
+	     */
+	    if (pR->Read(inbound))
+	    {
+		rc = Rx->Write(inbound.c_str(), inbound.length());
+		if (pLog->CheckVerbose(1))
+		{
+		    pLog->Log("# Inbound: %s\n", inbound.c_str());
+		}
+            }
+
             nanosleep( &sleeptime, NULL);
         }
         else
