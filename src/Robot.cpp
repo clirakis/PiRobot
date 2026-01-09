@@ -233,12 +233,17 @@ bool Robot::Read(string& value)
     SET_DEBUG_STACK;
     CLogger *pLog = CLogger::GetThis();
     char input[256];
-    size_t rv;
+    int rv;
 
     if (fSerialPortFd>=0)
     {
 	memset(input, 0, sizeof(input));
-	// rv is the number of bytes read. 
+	/*
+	 * rv is the number of bytes read. 
+	 * it is very odd that while the return value is specified as
+	 * size_t, error is given by -1. Seems at odds with each other. 
+	 * I've given rv the cast of int to deal with this. 
+	 */
 	rv = read(fSerialPortFd, input, sizeof(input));
 	if (rv>0)
 	{
