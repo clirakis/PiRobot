@@ -71,9 +71,10 @@ Robot::Robot(const char* ConfigFile) : CObject()
     SetName("Robot");
     SetError(); // No error.
 
-    fRun  = true;
+    fRun            = true;
+    fDisplay        = true;
     tcpControl.Port = 9999;  // default connection port.
-    fSerialPort = "NONE"; 
+    fSerialPort     = "NONE"; 
 
     if(!ConfigFile)
     {
@@ -89,7 +90,10 @@ Robot::Robot(const char* ConfigFile) : CObject()
     }
 
     /* USER POST CONFIGURATION STUFF. */
-    start_display();
+    if(fDisplay)
+    {
+	start_display();
+    }
 
     tcpControl.Run = 1;
 
@@ -157,7 +161,10 @@ Robot::~Robot(void)
     {
 	close(fSerialPortFd);
     }
-    end_display();
+    if (fDisplay)
+    {
+	end_display();
+    }
 
     // Make sure all file streams are closed
     Logger->Log("# Robot closed.\n");
@@ -354,9 +361,10 @@ bool Robot::ReadConfiguration(void)
 	 * index into group Robot
 	 */
 	const Setting &MM = root["Robot"];
-	MM.lookupValue("Debug",     Debug);
-	MM.lookupValue("Port",      tcpControl.Port);
+	MM.lookupValue("Debug",      Debug);
+	MM.lookupValue("Port",       tcpControl.Port);
 	MM.lookupValue("SerialPort", fSerialPort);
+	MM.lookupValue("Display",    fDisplay);
 	SetDebug(Debug); 
 	pLog->SetVerbose(Debug);
 	pLog->Log("# Debug value set to: %d\n", Debug);
@@ -405,9 +413,10 @@ bool Robot::WriteConfiguration(void)
     // USER TO FILL IN
     // Add some settings to the configuration.
     Setting &MM = root.add("Robot", Setting::TypeGroup);
-    MM.add("Debug",     Setting::TypeInt) = (int) pLog->GetVerbose();
-    MM.add("Port",      Setting::TypeInt) = tcpControl.Port;
-    MM.add("SerialPort", Setting::TypeString) = fSerialPort;
+    MM.add("Debug",      Setting::TypeInt)       = (int) pLog->GetVerbose();
+    MM.add("Port",       Setting::TypeInt)       = tcpControl.Port;
+    MM.add("Display",    Setting::TypeBoolean)   = fDisplay;
+    MM.add("SerialPort", Setting::TypeString)    = fSerialPort;
 
     // Write out the new configuration.
     try

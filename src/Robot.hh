@@ -80,6 +80,7 @@ public:
 private:
 
     bool fRun;
+    bool fDisplay;      /*! Curses display on/off. */
 
     /*! 
      * Configuration file name. 
