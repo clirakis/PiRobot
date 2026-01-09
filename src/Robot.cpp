@@ -231,13 +231,21 @@ bool Robot::Read(string& value)
     if (fSerialPortFd>=0)
     {
 	memset(input, 0, sizeof(input));
+	// rv is the number of bytes read. 
 	rv = read(fSerialPortFd, input, sizeof(input));
-	if (pLog->CheckVerbose(0))
+	if (rv>0)
 	{
-	    pLog->LogTime("Robot::Read %s\n", value.c_str());
+	    value = input;
+	    if (pLog->CheckVerbose(0))
+	    {
+		pLog->LogTime("Robot::Read %s\n", value.c_str());
+		return true;
+	    }
+	    else
+	    {
+		value.clear();
+	    }
 	}
-        // Returns number of bytes written. Not currently used. 
-	return (rv>0);
     }
     return false;
 }

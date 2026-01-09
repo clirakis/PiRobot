@@ -214,7 +214,7 @@ void* ConnectionThread(void* arg)
 	display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
 
         memset( line, 0, sizeof(line));
-        // Any inbound data? ------------------------------------
+        // Any inbound data from the TCP connection? -----------------------
         rc = Rx->Read(line, sizeof(line));
         if (rc > 0)
         {
@@ -235,7 +235,7 @@ void* ConnectionThread(void* arg)
             }
         }
 
-	// Output data ----------------------------------------
+	// Output TCP data ----------------------------------------
         rv = 0;
         time(&now);
         memset(line, 0, sizeof(line));
@@ -258,7 +258,7 @@ void* ConnectionThread(void* arg)
                 Rx->Stop();
             }
 	    /*
-	     * Any inbound traffic from the Arduino?
+	     * Any inbound traffic from the Arduino on the serial line?
 	     */
 	    if (pR->Read(inbound))
 	    {
@@ -268,7 +268,6 @@ void* ConnectionThread(void* arg)
 		    pLog->Log("# Inbound: %s\n", inbound.c_str());
 		}
             }
-
             nanosleep( &sleeptime, NULL);
         }
         else

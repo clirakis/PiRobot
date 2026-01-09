@@ -58,6 +58,14 @@ int SerialOpen(const char *port, speed_t BaudRate)
 
     if (port != NULL)
     {
+	/*
+	 * Flags for Open
+	 * O_RDWR - read write open. 
+	 * O_NOCTTY - not a control terminal, all control signals 
+	 *            propigate fully through like CTRL-C
+	 * O_NDELAY - Don't care what the stat of the DCD signal is. 
+	 * 
+	 */
 	rc = open( port, O_RDWR | O_NOCTTY | O_NDELAY);	
 	if (rc <0)
 	{
@@ -141,11 +149,16 @@ int SerialOpen(const char *port, speed_t BaudRate)
 	     */
 	    tcflush(rc, TCIFLUSH);
 	    tcsetattr(rc, TCSANOW, &newtio);
+#if 0
 	    /* 
 	     * this makes the read() function wait until it has stuff to 
-	     * read before reading 
+	     * read before reading, Blocking Read. 
 	     */
 	    fcntl( rc, F_SETFL, 0);
+#else
+	    /* return immediately. */
+	    fcntl( rc, F_SETFL, FNDELAY);
+#endif
 	}
     }
     return rc;
