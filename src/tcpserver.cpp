@@ -272,6 +272,10 @@ void* ConnectionThread(void* arg)
         }
         else
         {
+	    if (pLog->CheckVerbose(1))
+	    {
+		pLog->Log("# Connection thread, errno: %d\n", errno);
+	    }
             switch(errno)
             {
             case EINTR:
@@ -292,7 +296,7 @@ void* ConnectionThread(void* arg)
     Rx->Done();
     display_message("TCP Receive thread exits.");
     display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
-    pLog->LogTime("TCP Receive thread exits.");
+    pLog->LogTime("TCP Receive thread exits.\n");
     SET_DEBUG_STACK;
     Delete(Rx->Number());
     return 0;
