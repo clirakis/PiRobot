@@ -81,7 +81,7 @@ Robot::Robot(const char* ConfigFile) : CObject()
 	return;
     }
 
-    fConfigFileName = *ConfigFile;
+    fConfigFileName = ConfigFile;
     if(!ReadConfiguration())
     {
 	SetError(ECONFIG_READ_FAIL,__LINE__);

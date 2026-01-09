@@ -253,7 +253,7 @@ void* ConnectionThread(void* arg)
             if (rc < 0)
             {
 		display_message("Connection closed");
-		pLog->LogTime("# Connection Closed!\n");
+		pLog->LogTime(" Connection Closed!\n");
 		Rx->Close();
                 Rx->Stop();
             }
@@ -282,7 +282,7 @@ void* ConnectionThread(void* arg)
                 break;
             default:
                 perror("trywait");
-                cout << errno << endl;
+		pLog->LogTime(" TCP connection error: %d\n", errno);
                 nanosleep(&sleeptime, NULL);
                 break;
             }
