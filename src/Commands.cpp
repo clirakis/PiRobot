@@ -205,7 +205,7 @@ bool Commands::CommandArduino(const char *line)
 {
     SET_DEBUG_STACK;
     Robot *pR = Robot::GetThis();
-    return (pR->Write(line)==strlen(line));
+    return !(pR->Write(line)==strlen(line));
 }
 /**
  ******************************************************************
