@@ -193,7 +193,7 @@ size_t Robot::Write(const string& value)
     {
 	if (pLog->CheckVerbose(0))
 	{
-	    pLog->LogTime("Robot::Write %s\n", value.c_str());
+	    pLog->LogTime("Robot::Write %s", value.c_str());
 	}
         // Returns number of bytes written. Not currently used. 
 	return write(fSerialPortFd, value.c_str(), value.length());
@@ -238,7 +238,7 @@ bool Robot::Read(string& value)
 	    value = input;
 	    if (pLog->CheckVerbose(0))
 	    {
-		pLog->LogTime("Robot::Read %s\n", value.c_str());
+		pLog->LogTime("Robot::Read - %d, %s", rv, value.c_str());
 		return true;
 	    }
 	    else
