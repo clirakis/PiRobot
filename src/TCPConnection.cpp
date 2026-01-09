@@ -134,6 +134,8 @@ TCPConnection::~TCPConnection()
 long TCPConnection::Write(const void *vptr, size_t n)
 {
     SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+
     size_t	nleft;
     int	        nwritten;
     const char	*ptr;
@@ -144,10 +146,11 @@ long TCPConnection::Write(const void *vptr, size_t n)
     while (nleft > 0) 
     {
         nwritten = write(fConnection_fd, ptr, nleft);
-#if 0
-        cout << __FILE__ << " " << __LINE__ 
-             << " " << nwritten << " " << errno << endl;
-#endif
+	if (pLog->CheckVerbose(1))
+	{
+	    pLog->Log("# TCPWrite, nwritten: %d, errno %d\n", nwritten, errno);
+	}
+
         if ( nwritten < 0) 
         {
             /*

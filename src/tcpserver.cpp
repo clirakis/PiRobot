@@ -203,7 +203,7 @@ void* ConnectionThread(void* arg)
 
     if (pLog->CheckVerbose(0))
     {
-        pLog->LogTime("# Thread %d %d\n", Rx->Connection(), Rx->GetListen());
+        pLog->LogTime("Thread %d %d\n", Rx->Connection(), Rx->GetListen());
     }
     signal (SIGPIPE, UserSignal); 
 
@@ -246,7 +246,7 @@ void* ConnectionThread(void* arg)
             rc = Rx->Write(line, strlen(line));
             if (pLog->CheckVerbose(1))
             {
-		pLog->LogTime("# Write rc %s %d %d %d \n",
+		pLog->LogTime("Write rc %s %d %s %d \n",
 			      __FILE__, __LINE__, line, rc);
             }
 
@@ -290,9 +290,9 @@ void* ConnectionThread(void* arg)
     } // End while Rx->Run is true loop.
 
     Rx->Done();
-    display_message("Receive thread exits.");
+    display_message("TCP Receive thread exits.");
     display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
-
+    pLog->LogTime("TCP Receive thread exits.");
     SET_DEBUG_STACK;
     Delete(Rx->Number());
     return 0;
@@ -397,7 +397,7 @@ void* TCP_Server(void *val)
 		{
 		    if (pLog->CheckVerbose(0))
 		    {
-			pLog->LogTime("# RX Thread successfully created.\n"); 
+			pLog->LogTime("RX Thread successfully created.\n"); 
 		    }
 		}
 		else
