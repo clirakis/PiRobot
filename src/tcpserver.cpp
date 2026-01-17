@@ -244,7 +244,6 @@ void* ConnectionThread(void* arg)
         //ctime_r( &now, tmsg);
 	tmnow = localtime(&now);
 	strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
-	snprintf(line, sizeof(line), "H:%s", tmsg);
         if (rv == 0)
         {
 	    // Send a heartbeat to the originating connection. 
