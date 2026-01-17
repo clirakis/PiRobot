@@ -191,7 +191,7 @@ void* ConnectionThread(void* arg)
     CLogger *pLog     = CLogger::GetThis();
     Robot   *pR       = Robot::GetThis();
 
-    char     line[256];
+    char     line[256],tmsg[64];
     long     rc;
     int      rv       = 0;
     time_t   now;
@@ -238,8 +238,9 @@ void* ConnectionThread(void* arg)
 	// Output TCP data ----------------------------------------
         rv = 0;
         time(&now);
-        memset(line, 0, sizeof(line));
-        ctime_r( &now, line);
+        memset(tmsg, 0, sizeof(tmsg));
+        ctime_r( &now, tmsg);
+	snprintf(line, sizeof(line), "H:%s", tmsg);
         if (rv == 0)
         {
 	    // Send a heartbeat to the originating connection. 
