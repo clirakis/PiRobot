@@ -195,6 +195,7 @@ void* ConnectionThread(void* arg)
     long     rc;
     int      rv       = 0;
     time_t   now;
+    struct   tm *tmnow;
     string   inbound;
 
     //struct timespec timeout;
@@ -239,7 +240,10 @@ void* ConnectionThread(void* arg)
         rv = 0;
         time(&now);
         memset(tmsg, 0, sizeof(tmsg));
-        ctime_r( &now, tmsg);
+	
+        //ctime_r( &now, tmsg);
+	tmnow = localtime(&now);
+	strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
 	snprintf(line, sizeof(line), "H:%s", tmsg);
         if (rv == 0)
         {
