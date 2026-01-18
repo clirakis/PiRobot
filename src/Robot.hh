@@ -66,6 +66,8 @@ public:
      */
     bool Read(string &value);
 
+    inline bool DisplayOn(void) {return fDisplay;};
+
     /**
      * Control bits - control verbosity of output
      */

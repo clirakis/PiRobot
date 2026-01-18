@@ -153,13 +153,15 @@ static void UserSignal(int sig)
 {
     SET_DEBUG_STACK;
     CLogger *pLog = CLogger::GetThis();
+    Robot   *pRobot = Robot::GetThis();
 
     switch (sig)
     {
     case SIGPIPE:
 	pLog->LogTime("# SIGUSR: %d\n",sig);
 	//tcpControl.Run = 0;
-	display_message("SIGPIPE.");
+	if (pRobot->DisplayOn())
+	    display_message("SIGPIPE.");
 	break;
     }
 }
@@ -212,7 +214,8 @@ void* ConnectionThread(void* arg)
 
     while( Rx->Run())
     {
-	display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
+	if (pR->DisplayOn())
+	    display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
 
         memset( line, 0, sizeof(line));
         // Any inbound data from the TCP connection? -----------------------
@@ -256,7 +259,8 @@ void* ConnectionThread(void* arg)
 
             if (rc < 0)
             {
-		display_message("Connection closed");
+		if (pR->DisplayOn())
+		    display_message("Connection closed");
 		pLog->LogTime(" Connection Closed!\n");
 		Rx->Close();
                 Rx->Stop();
@@ -266,6 +270,9 @@ void* ConnectionThread(void* arg)
 	     */
 	    if (pR->Read(inbound))
 	    {
+		if (pR->DisplayOn())
+		    display_message("GPS: %s\n", inbound);
+
 		rc = Rx->Write(inbound.c_str(), inbound.length());
 		if (pLog->CheckVerbose(1))
 		{
@@ -298,8 +305,11 @@ void* ConnectionThread(void* arg)
     } // End while Rx->Run is true loop.
 
     Rx->Done();
-    display_message("TCP Receive thread exits.");
-    display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
+    if (pR->DisplayOn())
+    {
+	display_message("TCP Receive thread exits.");
+	display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
+    }
     pLog->LogTime("TCP Receive thread exits.\n");
     SET_DEBUG_STACK;
     Delete(Rx->Number());
@@ -330,6 +340,8 @@ void* TCP_Server(void *val)
 {
     SET_DEBUG_STACK;
     CLogger *pLog = CLogger::GetThis();
+    Robot   *pRobot = Robot::GetThis();
+
 
 //    const int              Port = 9999;
     int			   listenfd, connfd, rv;
@@ -387,7 +399,8 @@ void* TCP_Server(void *val)
 			      __FILE__, __LINE__, connfd, listenfd);
 		pLog->Log("# client: %s\n", inet_ntoa(cliaddr.sin_addr));
             }
-	    display_message("Connected to: %s\n", inet_ntoa(cliaddr.sin_addr));
+	    if (pRobot->DisplayOn())
+		display_message("Connected to: %s\n", inet_ntoa(cliaddr.sin_addr));
             Control = new TCPConnection(connfd, listenfd, inet_ntoa(cliaddr.sin_addr));
 	    rv = Add();
 	    if (rv>=0)
@@ -416,7 +429,8 @@ void* TCP_Server(void *val)
 	    else 
 	    {
 		delete Control;
-		display_message("Connection count exceeded.");
+		if (pRobot->DisplayOn())
+		    display_message("Connection count exceeded.");
 		pLog->LogTime("# ERROR - Connection count exceeded.\n");
 	    }
         }

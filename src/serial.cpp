@@ -102,7 +102,8 @@ int SerialOpen(const char *port, speed_t BaudRate)
 	     * PARENB  : enable partiy on output
 	     * PARODD  : odd parity. 
 	     */
-	    newtio.c_cflag = CS8 | CLOCAL | CREAD | PARENB | PARODD;
+	    //newtio.c_cflag = CS8 | CLOCAL | CREAD | PARENB | PARODD;
+	    newtio.c_cflag = CS8 | CLOCAL | CREAD;
 
 	    /*
 	     * Input modes.
