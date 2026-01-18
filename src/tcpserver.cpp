@@ -206,6 +206,27 @@ static void DisplayMessages(const string &inbound)
 /**
  ******************************************************************
  *
+ * Function Name : TCPWrite
+ *
+ * Description :
+ *
+ * Inputs :
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+
+/**
+ ******************************************************************
+ *
  * Function Name : SendHeartBeat
  *
  * Description : send a time tag as a heartbeat to know the 
@@ -225,22 +246,15 @@ static void DisplayMessages(const string &inbound)
  *
  *******************************************************************
  */
-static bool SendHeartBeat(TCPConnection *Rx)
+static bool WriteTCP(TCPConnection *Rx, const char *line)
 {
     SET_DEBUG_STACK;
     const struct timespec sleeptime = { 0, 100000000};
     CLogger   *pLog = CLogger::GetThis();
     Robot     *pR   = Robot::GetThis();
-    time_t    now;
-    struct    tm *tmnow;
     bool      rv = true;
-    char      line[128],tmsg[64];
     long      rc;
 
-    time(&now);
-    memset(tmsg, 0, sizeof(tmsg));
-    tmnow = localtime(&now);
-    strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
     if (rv)
     {
 	// Send a heartbeat to the originating connection. 
@@ -285,6 +299,41 @@ static bool SendHeartBeat(TCPConnection *Rx)
         }
     }
     return rv;
+}
+/**
+ ******************************************************************
+ *
+ * Function Name : SendHeartBeat
+ *
+ * Description : send a time tag as a heartbeat to know the 
+ *               connection is open and the times are reasonable. 
+ *               allows to check for latency too. 
+ *
+ * Inputs : TCPConnection parameters
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+static bool SendHeartBeat(TCPConnection *Rx)
+{
+    SET_DEBUG_STACK;
+    time_t    now;
+    struct    tm *tmnow;
+    char      line[128],tmsg[64];
+
+    time(&now);
+    memset(tmsg, 0, sizeof(tmsg));
+    tmnow = localtime(&now);
+    strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
+    return WriteTCP(Rx, line);
 }
 /**
  ******************************************************************
@@ -382,7 +431,7 @@ void* ConnectionThread(void* arg)
 	}
 
 	/*
-	 * Any inbound traffic from the Arduino on the serial line?
+	 * Any inbound traffic from the GPS
 	 */
 	if (pR->Read(inbound))
 	{
@@ -390,12 +439,16 @@ void* ConnectionThread(void* arg)
 	    {
 		DisplayMessages(inbound);
 	    }
-	    rc = Rx->Write(inbound.c_str(), inbound.length());
+	    WriteTCP(Rx, inbound.c_str());
 	    if (pLog->CheckVerbose(1))
 	    {
 		pLog->Log("# Inbound: %s\n", inbound.c_str());
 	    }
 	}
+	/* Arduino inbound */
+
+	// FIXME
+
 	nanosleep( &sleeptime, NULL);
 	time(&now);
     } // End while Rx->Run is true loop.
