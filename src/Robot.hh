@@ -67,6 +67,7 @@ public:
     bool Read(string &value);
 
     inline bool DisplayOn(void) {return fDisplay;};
+    inline bool GPSOn(void) {return fGPSOn;};
 
     /**
      * Control bits - control verbosity of output
@@ -83,6 +84,7 @@ private:
 
     bool fRun;
     bool fDisplay;      /*! Curses display on/off. */
+    bool fGPSOn;        /*! GPS transmit on/off    */
 
     /*! 
      * Configuration file name. 

@@ -371,6 +371,7 @@ bool Robot::ReadConfiguration(void)
 	MM.lookupValue("Port",       tcpControl.Port);
 	MM.lookupValue("SerialPort", fSerialPort);
 	MM.lookupValue("Display",    fDisplay);
+	MM.lookupValue("GPSOn",      fGPSOn);
 	SetDebug(Debug); 
 	pLog->SetVerbose(Debug);
 	pLog->Log("# Debug value set to: %d\n", Debug);
@@ -423,6 +424,7 @@ bool Robot::WriteConfiguration(void)
     MM.add("Port",       Setting::TypeInt)       = tcpControl.Port;
     MM.add("Display",    Setting::TypeBoolean)   = fDisplay;
     MM.add("SerialPort", Setting::TypeString)    = fSerialPort;
+    MM.add("GPSOn",      Setting::TypeBoolean)   = fGPSOn;
 
     // Write out the new configuration.
     try

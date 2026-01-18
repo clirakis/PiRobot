@@ -335,6 +335,26 @@ static bool SendHeartBeat(TCPConnection *Rx)
     strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
     return WriteTCP(Rx, line);
 }
+static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
+{
+    SET_DEBUG_STACK;
+    string inbound;
+    if(pR->GPSOn())
+    {
+	if (pR->Read(inbound))
+	{
+	    if (pR->DisplayOn())
+	    {
+		DisplayMessages(inbound);
+	    }
+	    WriteTCP(Rx, inbound.c_str());
+	    if (pLog->CheckVerbose(1))
+	    {
+		pLog->Log("# Inbound: %s\n", inbound.c_str());
+	    }
+	}
+    }
+}
 /**
  ******************************************************************
  *
@@ -364,7 +384,6 @@ void* ConnectionThread(void* arg)
     CLogger       *pLog  = CLogger::GetThis();
     Robot         *pR    = Robot::GetThis();
     int           rc;
-    string        inbound;
     char          line[512];
     time_t        now, prev;
 
@@ -433,18 +452,7 @@ void* ConnectionThread(void* arg)
 	/*
 	 * Any inbound traffic from the GPS
 	 */
-	if (pR->Read(inbound))
-	{
-	    if (pR->DisplayOn())
-	    {
-		DisplayMessages(inbound);
-	    }
-	    WriteTCP(Rx, inbound.c_str());
-	    if (pLog->CheckVerbose(1))
-	    {
-		pLog->Log("# Inbound: %s\n", inbound.c_str());
-	    }
-	}
+	SendGPS(Rx, pR, pLog);
 	/* Arduino inbound */
 
 	// FIXME
