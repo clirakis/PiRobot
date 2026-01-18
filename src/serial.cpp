@@ -29,6 +29,7 @@ using namespace std;
 /// Local Includes.
 #include "serial.hh"
 #include "debug.h"
+#include "CLogger.hh"
 
 /**
  ******************************************************************
@@ -52,6 +53,7 @@ using namespace std;
  */
 int SerialOpen(const char *port, speed_t BaudRate)
 {
+    CLogger *pLog = CLogger::GetThis();
     int rc = -1;
     struct termios newtio;
 
@@ -69,7 +71,8 @@ int SerialOpen(const char *port, speed_t BaudRate)
 	rc = open( port, O_RDWR | O_NOCTTY | O_NDELAY);	
 	if (rc <0)
 	{
-	    cerr<< strerror(errno) << endl;
+	    //cerr<< strerror(errno) << endl;
+	    pLog->LogTime("Serial Open Error: %s\n", strerror(errno));
 	}
 	else
 	{
