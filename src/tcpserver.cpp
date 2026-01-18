@@ -228,7 +228,7 @@ static void DisplayMessages(const string &inbound)
 static bool SendHeartBeat(TCPConnection *Rx)
 {
     SET_DEBUG_STACK;
-    const struct timespec sleeptime = { 0, 200000000};
+    const struct timespec sleeptime = { 0, 100000000};
     CLogger   *pLog = CLogger::GetThis();
     Robot     *pR   = Robot::GetThis();
     time_t    now;
@@ -310,14 +310,14 @@ void* ConnectionThread(void* arg)
 {
     SET_DEBUG_STACK;
     const   uint32_t  nanosec = 200000000;
-    const   int NStep = 1000000000/nanosec;     // Count heartbeats.
+
     TCPConnection *Rx    = (TCPConnection*) arg;
     CLogger       *pLog  = CLogger::GetThis();
     Robot         *pR    = Robot::GetThis();
     int           rc;
     string        inbound;
-    int           istep = 0;
     char          line[512];
+    time_t        now, prev;
 
     /* 
      * Seconds and microseconds timeout 
@@ -325,8 +325,8 @@ void* ConnectionThread(void* arg)
      */
     const struct timespec sleeptime = { 0, nanosec};
 
-    pLog->LogTime("Connection thread starts, HB every %d cycles\n", NStep);
-    pLog->LogTime("Thread %d %d\n", Rx->Connection(), Rx->GetListen());
+    pLog->LogTime("Connection Thread Starts, %d %d\n", 
+		  Rx->Connection(), Rx->GetListen());
 
     // register signal to end connection when it drops. 
     signal (SIGPIPE, UserSignal); 
@@ -334,6 +334,9 @@ void* ConnectionThread(void* arg)
     // Setup command structure .
     cmd = new Commands(Rx);
 
+    // count seconds between loops. 
+    time(&now);
+    prev = now; 
     // Loop until a quit occurs. 
     while( Rx->Run())
     {
@@ -372,13 +375,10 @@ void* ConnectionThread(void* arg)
 	 *  OUTBOUND TCP data ----------------------------------------
 	 * -----------------------------------------------------------
 	 */
-	if (istep == 0)
+	if ((now-prev)>0)
 	{
 	    SendHeartBeat(Rx);
-	    pLog->Log("# HB\n");
 	}
-	istep = (istep+1)%NStep;
-	pLog->Log("# step: %d\n", istep);
 
 	/*
 	 * Any inbound traffic from the Arduino on the serial line?
