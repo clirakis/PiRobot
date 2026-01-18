@@ -143,6 +143,7 @@ long TCPConnection::Write(const void *vptr, size_t n)
     fError = NO_ERROR;
     ptr    = (const char *)vptr;
     nleft  = n;
+
     while (nleft > 0) 
     {
         nwritten = write(fConnection_fd, ptr, nleft);

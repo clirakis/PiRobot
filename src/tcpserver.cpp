@@ -160,7 +160,9 @@ static void UserSignal(int sig)
 	pLog->LogTime("# SIGUSR: %d\n",sig);
 	//tcpControl.Run = 0;
 	if (pRobot->DisplayOn())
+	{
 	    display_message("SIGPIPE.");
+	}
 	break;
     }
 }
@@ -230,7 +232,9 @@ static bool SendHeartBeat(TCPConnection *Rx)
 	if (rc < 0)
 	{
 	    if (pR->DisplayOn())
+	    {
 		display_message("Connection closed");
+	    }
 	    pLog->LogTime(" Connection Closed!\n");
 	    Rx->Close();
 	    Rx->Stop();
@@ -343,11 +347,15 @@ void* ConnectionThread(void* arg)
 	 *  OUTBOUND TCP data ----------------------------------------
 	 * -----------------------------------------------------------
 	 */
-	istep = (istep+1)%NStep;
+
 	if (istep == 0)
 	{
+	    pLog->LogTime("SendHB\n");
 	    SendHeartBeat(Rx);
 	}
+	istep = (istep+1)%NStep;
+	pLog->Log("# step: %d\n", istep);
+
 	/*
 	 * Any inbound traffic from the Arduino on the serial line?
 	 */
@@ -357,7 +365,6 @@ void* ConnectionThread(void* arg)
 	    {
 		DisplayMessages(inbound);
 	    }
-	    
 	    rc = Rx->Write(inbound.c_str(), inbound.length());
 	    if (pLog->CheckVerbose(1))
 	    {
@@ -423,7 +430,6 @@ void* TCP_Server(void *val)
     bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family      = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    //servaddr.sin_port        = htons(SERV_PORT);
     servaddr.sin_port        = htons(TC->Port);
 
     bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
@@ -457,7 +463,10 @@ void* TCP_Server(void *val)
 		pLog->Log("# client: %s\n", inet_ntoa(cliaddr.sin_addr));
             }
 	    if (pRobot->DisplayOn())
-		display_message("Connected to: %s\n", inet_ntoa(cliaddr.sin_addr));
+	    {
+		display_message("Connected to: %s\n", 
+				inet_ntoa(cliaddr.sin_addr));
+	    }
             Control = new TCPConnection(connfd, listenfd, inet_ntoa(cliaddr.sin_addr));
 	    rv = Add();
 	    if (rv>=0)
@@ -487,7 +496,9 @@ void* TCP_Server(void *val)
 	    {
 		delete Control;
 		if (pRobot->DisplayOn())
+		{
 		    display_message("Connection count exceeded.");
+		}
 		pLog->LogTime("# ERROR - Connection count exceeded.\n");
 	    }
         }
