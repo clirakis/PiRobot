@@ -233,7 +233,7 @@ bool Robot::Read(string& value)
 {
     SET_DEBUG_STACK;
     CLogger *pLog = CLogger::GetThis();
-    char input[256];
+    char input[512];
     int rv;
 
     if (fSerialPortFd>=0)

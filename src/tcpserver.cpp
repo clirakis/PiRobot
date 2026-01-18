@@ -285,7 +285,7 @@ void* ConnectionThread(void* arg)
         {
 	    if (pLog->CheckVerbose(1))
 	    {
-		pLog->Log("# Connection thread, errno: %d\n", errno);
+		pLog->Log("# Connection thread, errno: %s\n", strerror(errno));
 	    }
             switch(errno)
             {
@@ -297,7 +297,7 @@ void* ConnectionThread(void* arg)
                 break;
             default:
                 perror("trywait");
-		pLog->LogTime(" TCP connection error: %d\n", errno);
+		pLog->LogTime(" TCP connection error: %s\n", strerror(errno));
                 nanosleep(&sleeptime, NULL);
                 break;
             }
