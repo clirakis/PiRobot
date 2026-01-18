@@ -252,12 +252,12 @@ bool Robot::Read(string& value)
 	    if (pLog->CheckVerbose(0))
 	    {
 		pLog->LogTime("Robot::Read - %d, %s", rv, value.c_str());
-		return true;
 	    }
-	    else
-	    {
+	    return true;
+	}
+	else
+	{
 		value.clear();
-	    }
 	}
     }
     return false;

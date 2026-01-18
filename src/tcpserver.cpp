@@ -375,6 +375,7 @@ void* ConnectionThread(void* arg)
 	if (istep == 0)
 	{
 	    SendHeartBeat(Rx);
+	    pLog->Log("# HB\n");
 	}
 	istep = (istep+1)%NStep;
 	pLog->Log("# step: %d\n", istep);
