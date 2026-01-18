@@ -187,6 +187,7 @@ static void UserSignal(int sig)
  */
 static void DisplayMessages(const string &inbound)
 {
+    SET_DEBUG_STACK;
     istringstream sstream(inbound);
     string token;
     vector<string> tokens;
@@ -199,6 +200,65 @@ static void DisplayMessages(const string &inbound)
     {
 	display_message("GPS: %s\n", token.c_str());
     }
+}
+static bool SendHeartBeat(TCPConnection *Rx)
+{
+    SET_DEBUG_STACK;
+    const struct timespec sleeptime = { 0, 200000000};
+    CLogger   *pLog = CLogger::GetThis();
+    Robot     *pR   = Robot::GetThis();
+    time_t    now;
+    struct    tm *tmnow;
+    bool      rv = true;
+    char      line[128],tmsg[64];
+    long      rc;
+
+    time(&now);
+    memset(tmsg, 0, sizeof(tmsg));
+    tmnow = localtime(&now);
+    strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
+    if (rv == 0)
+    {
+	// Send a heartbeat to the originating connection. 
+	rc = Rx->Write(line, strlen(line));
+	if (pLog->CheckVerbose(1))
+	{
+	    pLog->LogTime("Write rc %s %d %s %d \n",
+			  __FILE__, __LINE__, line, rc);
+	}
+	
+	if (rc < 0)
+	{
+	    if (pR->DisplayOn())
+		display_message("Connection closed");
+	    pLog->LogTime(" Connection Closed!\n");
+	    Rx->Close();
+	    Rx->Stop();
+	    rv = false;
+        }
+        else
+        {
+	    if (pLog->CheckVerbose(1))
+	    {
+		pLog->Log("# Connection thread, errno: %s\n", strerror(errno));
+	    }
+            switch(errno)
+            {
+            case EINTR:
+            case EAGAIN:
+            case ESPIPE:
+            case ETIMEDOUT:
+                nanosleep(&sleeptime, NULL);
+                break;
+            default:
+                perror("trywait");
+		pLog->LogTime(" TCP connection error: %s\n", strerror(errno));
+                nanosleep(&sleeptime, NULL);
+                break;
+            }
+        }
+    }
+    return rv;
 }
 /**
  ******************************************************************
@@ -223,20 +283,22 @@ static void DisplayMessages(const string &inbound)
 void* ConnectionThread(void* arg)
 {
     SET_DEBUG_STACK;
-    TCPConnection *Rx = (TCPConnection*) arg;
-    CLogger *pLog     = CLogger::GetThis();
-    Robot   *pR       = Robot::GetThis();
+    const   uint32_t  nanosec = 200000000;
+    const   int NStep = 1000000000/nanosec;     // Count heartbeats.
+    TCPConnection *Rx    = (TCPConnection*) arg;
+    CLogger       *pLog  = CLogger::GetThis();
+    Robot         *pR    = Robot::GetThis();
+    int           rc;
+    string        inbound;
+    int           istep = 0;
+    char          line[512];
 
-    char     line[256],tmsg[64];
-    long     rc;
-    int      rv       = 0;
-    time_t   now;
-    struct   tm *tmnow;
-    string   inbound;
-
-    //struct timespec timeout;
-    /* Seconds and microseconds timeout at 100ms */
-    struct timespec sleeptime = { 0, 200000000};
+    pLog->LogTime("Connection thread starts, HB every %d cycles\n", NStep);
+    /* 
+     * Seconds and microseconds timeout 
+     * Only send heartbeat every second. 
+     */
+    const struct timespec sleeptime = { 0, nanosec};
 
     if (pLog->CheckVerbose(0))
     {
@@ -249,10 +311,14 @@ void* ConnectionThread(void* arg)
     while( Rx->Run())
     {
 	if (pR->DisplayOn())
+	{
 	    display_connection( Rx->Number(), Rx->Address(), Rx->Purpose());
-
+	}
+        /* -------------------------------------------
+	 * INBOUND TCP TRAFFIC 
+	 * -------------------------------------------
+	 */
         memset( line, 0, sizeof(line));
-        // Any inbound data from the TCP connection? -----------------------
         rc = Rx->Read(line, sizeof(line));
         if (rc > 0)
         {
@@ -273,69 +339,31 @@ void* ConnectionThread(void* arg)
             }
         }
 
-	// Output TCP data ----------------------------------------
-        rv = 0;
-        time(&now);
-        memset(tmsg, 0, sizeof(tmsg));
-	
-        //ctime_r( &now, tmsg);
-	tmnow = localtime(&now);
-	strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
-        if (rv == 0)
-        {
-	    // Send a heartbeat to the originating connection. 
-            rc = Rx->Write(line, strlen(line));
-            if (pLog->CheckVerbose(1))
-            {
-		pLog->LogTime("Write rc %s %d %s %d \n",
-			      __FILE__, __LINE__, line, rc);
-            }
-
-            if (rc < 0)
-            {
-		if (pR->DisplayOn())
-		    display_message("Connection closed");
-		pLog->LogTime(" Connection Closed!\n");
-		Rx->Close();
-                Rx->Stop();
-            }
-	    /*
-	     * Any inbound traffic from the Arduino on the serial line?
-	     */
-	    if (pR->Read(inbound))
+	/* -----------------------------------------------------------
+	 *  OUTBOUND TCP data ----------------------------------------
+	 * -----------------------------------------------------------
+	 */
+	if (istep%NStep == 0)
+	{
+	    SendHeartBeat(Rx);
+	}
+	/*
+	 * Any inbound traffic from the Arduino on the serial line?
+	 */
+	if (pR->Read(inbound))
+	{
+	    if (pR->DisplayOn())
 	    {
-		if (pR->DisplayOn())
-		    DisplayMessages(inbound);
-
-		rc = Rx->Write(inbound.c_str(), inbound.length());
-		if (pLog->CheckVerbose(1))
-		{
-		    pLog->Log("# Inbound: %s\n", inbound.c_str());
-		}
-            }
-            nanosleep( &sleeptime, NULL);
-        }
-        else
-        {
+		DisplayMessages(inbound);
+	    }
+	    
+	    rc = Rx->Write(inbound.c_str(), inbound.length());
 	    if (pLog->CheckVerbose(1))
 	    {
-		pLog->Log("# Connection thread, errno: %s\n", strerror(errno));
+		pLog->Log("# Inbound: %s\n", inbound.c_str());
 	    }
-            switch(errno)
-            {
-            case EINTR:
-            case EAGAIN:
-            case ESPIPE:
-            case ETIMEDOUT:
-                nanosleep(&sleeptime, NULL);
-                break;
-            default:
-                perror("trywait");
-		pLog->LogTime(" TCP connection error: %s\n", strerror(errno));
-                nanosleep(&sleeptime, NULL);
-                break;
-            }
-        }
+	}
+	nanosleep( &sleeptime, NULL);
     } // End while Rx->Run is true loop.
 
     Rx->Done();
