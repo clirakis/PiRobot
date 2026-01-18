@@ -75,6 +75,7 @@ Robot::Robot(const char* ConfigFile) : CObject()
     fDisplay        = true;
     tcpControl.Port = 9999;  // default connection port.
     fSerialPort     = "NONE"; 
+    fGPSOn          = true;
 
     if(!ConfigFile)
     {
