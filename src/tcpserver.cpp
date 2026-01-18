@@ -372,10 +372,8 @@ void* ConnectionThread(void* arg)
 	 *  OUTBOUND TCP data ----------------------------------------
 	 * -----------------------------------------------------------
 	 */
-	//if (istep == 0)
-	if(true)
+	if (istep == 0)
 	{
-	    pLog->LogTime("SendHB\n");
 	    SendHeartBeat(Rx);
 	}
 	istep = (istep+1)%NStep;
