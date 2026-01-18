@@ -378,6 +378,7 @@ void* ConnectionThread(void* arg)
 	if ((now-prev)>0)
 	{
 	    SendHeartBeat(Rx);
+	    prev = now;
 	}
 
 	/*
@@ -396,6 +397,7 @@ void* ConnectionThread(void* arg)
 	    }
 	}
 	nanosleep( &sleeptime, NULL);
+	time(&now);
     } // End while Rx->Run is true loop.
 
     Rx->Done();
