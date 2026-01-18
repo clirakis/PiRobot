@@ -271,7 +271,7 @@ void* ConnectionThread(void* arg)
 	    if (pR->Read(inbound))
 	    {
 		if (pR->DisplayOn())
-		    display_message("GPS: %s\n", inbound);
+		    display_message("GPS: %s\n", inbound.c_str());
 
 		rc = Rx->Write(inbound.c_str(), inbound.length());
 		if (pLog->CheckVerbose(1))

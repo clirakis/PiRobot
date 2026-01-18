@@ -104,7 +104,8 @@ Robot::Robot(const char* ConfigFile) : CObject()
     else
     {
 	SET_DEBUG_STACK;
-	display_message(" RX Thread failed.\n");
+	if (fDisplay)
+	    display_message(" RX Thread failed.\n");
 	Logger->Log("# RX Thread create failed. \n");
 	return;
     }
