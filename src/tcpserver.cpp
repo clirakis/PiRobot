@@ -21,10 +21,9 @@
 /* System includes. */
 #include <iostream>
 using namespace std;
-// #include <semaphore.h>
-// #include <sys/resource.h>
-// #include <fstream>
-// #include <string>
+#include <string>
+#include <sstream>
+#include <vector> 
 
 #include <csignal>
 #include <arpa/inet.h>      /* inet_ntoa() to format IP address */
@@ -165,7 +164,42 @@ static void UserSignal(int sig)
 	break;
     }
 }
+/**
+ ******************************************************************
+ *
+ * Function Name : DisplayMessages
+ *
+ * Description : Break up the inbound serial messages into
+ *               chunks to display on the screen if active. 
+ *
+ * Inputs : std::string to parse
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+static void DisplayMessages(const string &inbound)
+{
+    istringstream sstream(inbound);
+    string token;
+    vector<string> tokens;
 
+    while(getline(sstream, token, '\n'))
+    {
+	tokens.push_back(token);
+    }
+    for(const string& token : tokens)
+    {
+	display_message("GPS: %s\n", token.c_str());
+    }
+}
 /**
  ******************************************************************
  *
@@ -202,7 +236,7 @@ void* ConnectionThread(void* arg)
 
     //struct timespec timeout;
     /* Seconds and microseconds timeout at 100ms */
-    struct timespec sleeptime = { 0, 500000000};
+    struct timespec sleeptime = { 0, 200000000};
 
     if (pLog->CheckVerbose(0))
     {
@@ -271,7 +305,7 @@ void* ConnectionThread(void* arg)
 	    if (pR->Read(inbound))
 	    {
 		if (pR->DisplayOn())
-		    display_message("GPS: %s\n", inbound.c_str());
+		    DisplayMessages(inbound);
 
 		rc = Rx->Write(inbound.c_str(), inbound.length());
 		if (pLog->CheckVerbose(1))

@@ -148,7 +148,8 @@ long TCPConnection::Write(const void *vptr, size_t n)
         nwritten = write(fConnection_fd, ptr, nleft);
 	if (pLog->CheckVerbose(1))
 	{
-	    pLog->Log("# TCPWrite, nwritten: %d, errno %d\n", nwritten, errno);
+	    pLog->Log("# TCPWrite, nwritten: %d, errno %s\n", 
+		      nwritten, strerror(errno));
 	}
 
         if ( nwritten < 0) 
