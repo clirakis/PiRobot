@@ -110,7 +110,7 @@ Robot::Robot(const char* ConfigFile) : CObject()
     }
 
     /* open up the serial port to the Raspberry Pi */
-    fSerialPortFd = SerialOpen(fSerialPort.c_str(), B115200);
+    fSerialPortFd = SerialOpen(fSerialPort.c_str(), B9600);
     if (fSerialPortFd < 0)
     {
 	Logger->Log("# Error opening serial port %s\n", fSerialPort.c_str());

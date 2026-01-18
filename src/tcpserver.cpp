@@ -28,7 +28,7 @@ using namespace std;
 
 #include <csignal>
 #include <arpa/inet.h>      /* inet_ntoa() to format IP address */
-#include <cstring>         /* bzero */
+#include <cstring>          /* bzero */
 #include <fcntl.h>
 
 /** Local Includes. */
