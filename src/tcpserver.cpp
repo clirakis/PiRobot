@@ -343,7 +343,8 @@ void* ConnectionThread(void* arg)
 	 *  OUTBOUND TCP data ----------------------------------------
 	 * -----------------------------------------------------------
 	 */
-	if (istep%NStep == 0)
+	istep = (istep+1)%NStep;
+	if (istep == 0)
 	{
 	    SendHeartBeat(Rx);
 	}
