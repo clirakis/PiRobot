@@ -405,8 +405,6 @@ void* TCP_Server(void *val)
     CLogger *pLog = CLogger::GetThis();
     Robot   *pRobot = Robot::GetThis();
 
-
-//    const int              Port = 9999;
     int			   listenfd, connfd, rv;
     socklen_t	           clilen;
     struct sockaddr_in	   cliaddr, servaddr;
@@ -422,7 +420,6 @@ void* TCP_Server(void *val)
 	pLog->LogTime("# Error setting non-block on listen socket.\n");
     }
 
-
     bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family      = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -433,10 +430,7 @@ void* TCP_Server(void *val)
 
     listen(listenfd, LISTENQ);
 
-    if (pLog->CheckVerbose(0))
-    {
-        pLog->LogTime("# Waiting for connections on port: %d \n", TC->Port);
-    }
+    pLog->LogTime("Waiting for connections on port: %d \n", TC->Port);
 
     while(TC->Run)
     {
@@ -498,6 +492,7 @@ void* TCP_Server(void *val)
 	    }
         }
     }
+    pLog->LogTime("TCP_Server thread exits.\n");
     return 0;
 }
 void TCPClose(void)
