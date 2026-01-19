@@ -385,14 +385,18 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
 static void SendArduino(TCPConnection *Rx, Robot *pR, CLogger *pLog)
 {
     SET_DEBUG_STACK;
+    const string prefix("@AR:");
     string inbound;
+    string outbound;
+
     if (pR->GetArduino()->Read(inbound))
     {
+	outbound = prefix + inbound;
 	if (pR->DisplayOn())
 	{
-	    DisplayMessages(inbound);
+	    DisplayMessages(outbound);
 	}
-	WriteTCP(Rx, inbound.c_str());
+	WriteTCP(Rx, outbound.c_str());
 	if (pLog->CheckVerbose(1))
 	{
 	    pLog->Log("# Arduino Inbound: %s\n", inbound.c_str());
