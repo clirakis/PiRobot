@@ -38,6 +38,7 @@ using namespace std;
 #include "Commands.hh"
 #include "CLogger.hh"
 #include "Robot.hh"
+#include "serial.hh"
 
 /** Global Variables. */
 
@@ -203,35 +204,13 @@ static void DisplayMessages(const string &inbound)
 	display_message("GPS: %s\n", token.c_str());
     }
 }
-/**
- ******************************************************************
- *
- * Function Name : TCPWrite
- *
- * Description :
- *
- * Inputs :
- *
- * Returns :
- *
- * Error Conditions :
- * 
- * Unit Tested on: 
- *
- * Unit Tested by: CBL
- *
- *
- *******************************************************************
- */
 
 /**
  ******************************************************************
  *
- * Function Name : SendHeartBeat
+ * Function Name : WriteTCP
  *
- * Description : send a time tag as a heartbeat to know the 
- *               connection is open and the times are reasonable. 
- *               allows to check for latency too. 
+ * Description : Write a character stream to the TCP connection.  
  *
  * Inputs : TCPConnection parameters
  *
@@ -335,13 +314,36 @@ static bool SendHeartBeat(TCPConnection *Rx)
     strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
     return WriteTCP(Rx, line);
 }
+/**
+ ******************************************************************
+ *
+ * Function Name : SendGPS
+ *
+ * Description : get the GPS stream from the serial port allocated
+ *               to it and send the serial data to the client. 
+ *
+ * Inputs : TCPConnection - the client connection
+ *          Robot - Pointer to the Robot class. 
+ *          pLog  - Pointer to a logger function. 
+ *
+ * Returns : NONE
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
 static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
 {
     SET_DEBUG_STACK;
     string inbound;
     if(pR->GPSOn())
     {
-	if (pR->Read(inbound))
+	if (pR->GetGPS()->Read(inbound))
 	{
 	    if (pR->DisplayOn())
 	    {
@@ -350,8 +352,50 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
 	    WriteTCP(Rx, inbound.c_str());
 	    if (pLog->CheckVerbose(1))
 	    {
-		pLog->Log("# Inbound: %s\n", inbound.c_str());
+		pLog->Log("# GPS Inbound: %s\n", inbound.c_str());
 	    }
+	}
+    }
+}
+
+
+/**
+ ******************************************************************
+ *
+ * Function Name : SendArduino
+ *
+ * Description : get the Arduino stream from the serial port allocated
+ *               to it and send the serial data to the client. 
+ *
+ * Inputs : TCPConnection - the client connection
+ *          Robot - Pointer to the Robot class. 
+ *          pLog  - Pointer to a logger function. 
+ *
+ * Returns : NONE
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+static void SendArduino(TCPConnection *Rx, Robot *pR, CLogger *pLog)
+{
+    SET_DEBUG_STACK;
+    string inbound;
+    if (pR->GetArduino()->Read(inbound))
+    {
+	if (pR->DisplayOn())
+	{
+	    DisplayMessages(inbound);
+	}
+	WriteTCP(Rx, inbound.c_str());
+	if (pLog->CheckVerbose(1))
+	{
+	    pLog->Log("# Arduino Inbound: %s\n", inbound.c_str());
 	}
     }
 }
@@ -454,8 +498,7 @@ void* ConnectionThread(void* arg)
 	 */
 	SendGPS(Rx, pR, pLog);
 	/* Arduino inbound */
-
-	// FIXME
+	SendArduino(Rx, pR, pLog);
 
 	nanosleep( &sleeptime, NULL);
 	time(&now);

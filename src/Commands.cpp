@@ -28,6 +28,7 @@ using namespace std;
 #include "Version.hh"
 #include "TCPConnection.hh"
 #include "Robot.hh"
+#include "serial.hh"
 
 Commands* Commands::fCommands;
 
@@ -205,7 +206,7 @@ bool Commands::CommandArduino(const char *line)
 {
     SET_DEBUG_STACK;
     Robot *pR = Robot::GetThis();
-    return !(pR->Write(line)==strlen(line));
+    return !(pR->GetArduino()->Write(line)==strlen(line));
 }
 /**
  ******************************************************************

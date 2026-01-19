@@ -59,7 +59,10 @@ public:
     void Stop(void);
 
     inline bool DisplayOn(void) {return fDisplay;};
-    inline bool GPSOn(void) {return fGPSOn;};
+    inline bool GPSOn(void)     {return fGPSOn;};
+
+    inline RobotSerial* GetArduino(void) {return fSerialArduino;};
+    inline RobotSerial* GetGPS(void) {return fSerialGPS;};
 
     /**
      * Control bits - control verbosity of output
