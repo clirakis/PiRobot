@@ -60,6 +60,7 @@ public:
 
     inline bool DisplayOn(void) {return fDisplay;};
     inline bool GPSOn(void)     {return fGPSOn;};
+    inline bool GPSToggle(void) {fGPSOn = !fGPSOn; return fGPSOn;};
 
     inline RobotSerial* GetArduino(void) {return fSerialArduino;};
     inline RobotSerial* GetGPS(void) {return fSerialGPS;};

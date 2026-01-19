@@ -23,6 +23,7 @@ using namespace std;
 
 // Local Includes.
 #include "debug.h"
+#include "CLogger.hh"
 #include "Commands.hh"
 #include "RSdisp.hh"
 #include "Version.hh"
@@ -163,9 +164,16 @@ bool Commands::Parse(const char *line)
 bool Commands::ProgramControl(const char *line)
 {
     SET_DEBUG_STACK;
-    bool rc = false;
-    TCPConnection *c = TCPConnection::Get();
-    char msg[64];
+    CLogger       *pLog = CLogger::GetThis();
+    TCPConnection *c    = TCPConnection::Get();
+    Robot         *pR   = Robot::GetThis();
+    bool          rc    = false;
+    char          msg[64];
+
+    if (pLog->CheckVerbose(0))
+    {
+	pLog->LogTime("Robot Command: %s\n", line);
+    }
 
     if (!strncasecmp( line, "QUIT", 4))
     {
@@ -176,6 +184,19 @@ bool Commands::ProgramControl(const char *line)
     else if(!strncasecmp( line, "VERSION", 7))
     {
 	sprintf(msg,"Version: %d.%d\n", MAJOR_VERSION, MINOR_VERSION);
+	c->Write(msg, strlen(msg));
+    }
+    else if(!strncasecmp( line, "GPS", 3))
+    {
+	// Toggle GPS stream on and off. 
+	if(pR->GPSToggle())
+	{
+	    snprintf(msg, sizeof(msg), "GPS ON!");
+	}
+	else
+	{
+	    snprintf(msg, sizeof(msg), "GPS OFF!");
+	}
 	c->Write(msg, strlen(msg));
     }
     SET_DEBUG_STACK;
