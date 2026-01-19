@@ -10,6 +10,7 @@
  * Restrictions/Limitations : none
  *
  * Change Descriptions :
+ * 19-Jan-26 CBL serial is now a class
  *
  * Classification : Unclassified
  *
@@ -22,6 +23,8 @@
 #define __ROBOT_hh_
 #  include <string>
 #  include "CObject.hh" // Base class with all kinds of intermediate
+
+class RobotSerial;
 
 class Robot : public CObject
 {
@@ -55,17 +58,6 @@ public:
      */
     void Stop(void);
 
-    /*!
-     * Write a value through on the serial line to the Arduino
-     */
-    size_t Write(const string &value);
-
-    /*!
-     * Read any data back from the Arduino 
-     * act or send it along to the TCP connection.
-     */
-    bool Read(string &value);
-
     inline bool DisplayOn(void) {return fDisplay;};
     inline bool GPSOn(void) {return fGPSOn;};
 
@@ -91,9 +83,8 @@ private:
      */
     std::string   fConfigFileName;
 
-    std::string   fSerialPort;
-
-    int fSerialPortFd;
+    RobotSerial*  fSerialGPS;
+    RobotSerial*  fSerialArduino;
 
     /* Private functions. ==============================  */
 

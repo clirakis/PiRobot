@@ -74,8 +74,9 @@ Robot::Robot(const char* ConfigFile) : CObject()
     fRun            = true;
     fDisplay        = true;
     tcpControl.Port = 9999;  // default connection port.
-    fSerialPort     = "NONE"; 
     fGPSOn          = true;
+    fSerialGPS      = NULL;
+    fSerialArduino  = NULL;
 
     if(!ConfigFile)
     {
@@ -109,13 +110,6 @@ Robot::Robot(const char* ConfigFile) : CObject()
 	    display_message(" RX Thread failed.\n");
 	Logger->Log("# RX Thread create failed. \n");
 	return;
-    }
-
-    /* open up the serial port to the Raspberry Pi */
-    fSerialPortFd = SerialOpen(fSerialPort.c_str(), B9600);
-    if (fSerialPortFd < 0)
-    {
-	Logger->Log("# Error opening serial port %s\n", fSerialPort.c_str());
     }
 
     Logger->Log("# Robot constructed.\n");
@@ -159,10 +153,9 @@ Robot::~Robot(void)
     // Shutdown the TCP server
     tcpControl.Run = 0;
     TCPClose();
-    if (fSerialPortFd>=0)
-    {
-	close(fSerialPortFd);
-    }
+    delete fSerialGPS;
+    delete fSerialArduino;
+
     if (fDisplay)
     {
 	end_display();
@@ -171,97 +164,6 @@ Robot::~Robot(void)
     // Make sure all file streams are closed
     Logger->Log("# Robot closed.\n");
     SET_DEBUG_STACK;
-}
-/**
- ******************************************************************
- *
- * Function Name : Write
- *
- * Description : Write data to open serial port. 
- *
- * Inputs : string to write out. Should be text to communicate with
- *          the system. 
- *
- * Returns : NONE
- *
- * Error Conditions :
- * 
- * Unit Tested on: 
- *
- * Unit Tested by: CBL
- *
- *
- *******************************************************************
- */
-size_t Robot::Write(const string& value)
-{
-    SET_DEBUG_STACK;
-    CLogger *pLog = CLogger::GetThis();
-
-    if (fSerialPortFd>=0)
-    {
-	if (pLog->CheckVerbose(0))
-	{
-	    pLog->LogTime("Robot::Write %s", value.c_str());
-	}
-        // Returns number of bytes written. Not currently used. 
-	return write(fSerialPortFd, value.c_str(), value.length());
-    }
-    return 0;
-}
-
-/**
- ******************************************************************
- *
- * Function Name : Read
- *
- * Description : Read any data on the open serial port. 
- *
- * Inputs : none
- *
- * Returns : NONE
- *
- * Error Conditions :
- * 
- * Unit Tested on: 
- *
- * Unit Tested by: CBL
- *
- *
- *******************************************************************
- */
-bool Robot::Read(string& value)
-{
-    SET_DEBUG_STACK;
-    CLogger *pLog = CLogger::GetThis();
-    char input[512];
-    int rv;
-
-    if (fSerialPortFd>=0)
-    {
-	memset(input, 0, sizeof(input));
-	/*
-	 * rv is the number of bytes read. 
-	 * it is very odd that while the return value is specified as
-	 * size_t, error is given by -1. Seems at odds with each other. 
-	 * I've given rv the cast of int to deal with this. 
-	 */
-	rv = read(fSerialPortFd, input, sizeof(input));
-	if (rv>0)
-	{
-	    value = input;
-	    if (pLog->CheckVerbose(0))
-	    {
-		pLog->LogTime("Robot::Read - %d, %s", rv, value.c_str());
-	    }
-	    return true;
-	}
-	else
-	{
-		value.clear();
-	}
-    }
-    return false;
 }
 
 /**
@@ -332,8 +234,10 @@ bool Robot::ReadConfiguration(void)
 {
     SET_DEBUG_STACK;
     CLogger *pLog = CLogger::GetThis();
+    Config  *pCFG = new Config();
+    string  name1, name2;
+
     ClearError(__LINE__);
-    Config *pCFG = new Config();
 
     /*
      * Open the configuragtion file. 
@@ -370,13 +274,31 @@ bool Robot::ReadConfiguration(void)
 	const Setting &MM = root["Robot"];
 	MM.lookupValue("Debug",      Debug);
 	MM.lookupValue("Port",       tcpControl.Port);
-	MM.lookupValue("SerialPort", fSerialPort);
+	MM.lookupValue("GPSSerialPort", name1);
+	MM.lookupValue("ArduinoSerialPort", name2);
 	MM.lookupValue("Display",    fDisplay);
 	MM.lookupValue("GPSOn",      fGPSOn);
 	SetDebug(Debug); 
 	pLog->SetVerbose(Debug);
 	pLog->Log("# Debug value set to: %d\n", Debug);
 	pLog->Log("# Port value set to: %d\n",  tcpControl.Port);
+
+	if (fGPSOn)
+	{
+	    fSerialGPS = new RobotSerial(name1.c_str(), B9600);
+	    if (fSerialGPS->CheckError())
+	    {
+		pLog->Log("# Error opening GPS serial port %s\n", 
+			  name1.c_str());
+	    }
+	}
+        /* open up the serial port to the arduino */
+	fSerialArduino = new RobotSerial(name2.c_str(), B115200);
+	if (fSerialArduino->CheckError())
+	{
+	    pLog->Log("# Error opening Arduino serial port %s\n", 
+		      name2.c_str());
+	}
     }
     catch(const SettingNotFoundException &nfex)
     {
@@ -421,11 +343,19 @@ bool Robot::WriteConfiguration(void)
     // USER TO FILL IN
     // Add some settings to the configuration.
     Setting &MM = root.add("Robot", Setting::TypeGroup);
-    MM.add("Debug",      Setting::TypeInt)       = (int) pLog->GetVerbose();
-    MM.add("Port",       Setting::TypeInt)       = tcpControl.Port;
-    MM.add("Display",    Setting::TypeBoolean)   = fDisplay;
-    MM.add("SerialPort", Setting::TypeString)    = fSerialPort;
-    MM.add("GPSOn",      Setting::TypeBoolean)   = fGPSOn;
+    MM.add("Debug",         Setting::TypeInt)       = (int) pLog->GetVerbose();
+    MM.add("Port",          Setting::TypeInt)       = tcpControl.Port;
+    MM.add("Display",       Setting::TypeBoolean)   = fDisplay;
+    MM.add("GPSOn",         Setting::TypeBoolean)   = fGPSOn;
+    if (fGPSOn)
+    {
+	MM.add("GPSSerialPort", Setting::TypeString) = fSerialGPS->PortName();
+    }
+    else
+    {
+	MM.add("GPSSerialPort", Setting::TypeString) = string("NONE");
+    }
+    MM.add("ArduinoSerialPort", Setting::TypeString) = fSerialArduino->PortName(); 
 
     // Write out the new configuration.
     try

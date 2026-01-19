@@ -10,6 +10,7 @@
  * Restrictions/Limitations :
  *
  * Change Descriptions :
+ * 19-Jan-26    CBL    Made into class
  *
  * Classification : Unclassified
  *
@@ -30,6 +31,39 @@ using namespace std;
 #include "serial.hh"
 #include "debug.h"
 #include "CLogger.hh"
+/**
+ ******************************************************************
+ *
+ * Function Name :
+ *
+ * Description :
+ *
+ * Inputs :
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+RobotSerial::RobotSerial(const char *port, speed_t BaudRate, bool Blocking) :
+    CObject()
+{
+    SET_DEBUG_STACK;
+    SetName("RobotSerial");
+    SetError(ENONE, __LINE__);
+    if (port)
+	fPortName     = port;
+    else
+	fPortName     = string("NONE");
+
+    fSerialPortFd = SerialOpen(port, BaudRate, Blocking);
+}
 
 /**
  ******************************************************************
@@ -51,7 +85,32 @@ using namespace std;
  *
  *******************************************************************
  */
-int SerialOpen(const char *port, speed_t BaudRate)
+RobotSerial::~RobotSerial(void)
+{
+    SET_DEBUG_STACK;
+    close(fSerialPortFd);
+}
+/**
+ ******************************************************************
+ *
+ * Function Name :
+ *
+ * Description :
+ *
+ * Inputs :
+ *
+ * Returns :
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+int RobotSerial::SerialOpen(const char *port, speed_t BaudRate, bool Blocking)
 {
     CLogger *pLog = CLogger::GetThis();
     int rc = -1;
@@ -73,6 +132,7 @@ int SerialOpen(const char *port, speed_t BaudRate)
 	{
 	    //cerr<< strerror(errno) << endl;
 	    pLog->LogTime("Serial Open Error: %s\n", strerror(errno));
+	    SetError(-1, __LINE__);
 	}
 	else
 	{
@@ -153,20 +213,118 @@ int SerialOpen(const char *port, speed_t BaudRate)
 	     */
 	    tcflush(rc, TCIFLUSH);
 	    tcsetattr(rc, TCSANOW, &newtio);
-#if 0
-	    /* 
-	     * this makes the read() function wait until it has stuff to 
-	     * read before reading, Blocking Read. 
-	     */
-	    fcntl( rc, F_SETFL, 0);
-#else
-	    /* return immediately. */
-	    fcntl( rc, F_SETFL, FNDELAY);
-#endif
+	    if(Blocking)
+	    {
+		/* 
+		 * this makes the read() function wait until it has stuff to 
+		 * read before reading, Blocking Read. 
+		 */
+		fcntl( rc, F_SETFL, 0);
+		pLog->Log("# Serial open blocking\n");
+	    }
+	    else
+	    {
+		/* return immediately. */
+		fcntl( rc, F_SETFL, FNDELAY);
+		pLog->Log("# Serial open non-blocking.\n");
+	    }
 	}
     }
     return rc;
 }
+
+/**
+ ******************************************************************
+ *
+ * Function Name : Write
+ *
+ * Description : Write data to open serial port. 
+ *
+ * Inputs : string to write out. Should be text to communicate with
+ *          the system. 
+ *
+ * Returns : NONE
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+size_t RobotSerial::Write(const string& value)
+{
+    SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+
+    if (fSerialPortFd>=0)
+    {
+	if (pLog->CheckVerbose(0))
+	{
+	    pLog->LogTime("Robot::Write %s", value.c_str());
+	}
+        // Returns number of bytes written. Not currently used. 
+	return write(fSerialPortFd, value.c_str(), value.length());
+    }
+    return 0;
+}
+
+/**
+ ******************************************************************
+ *
+ * Function Name : Read
+ *
+ * Description : Read any data on the open serial port. 
+ *
+ * Inputs : none
+ *
+ * Returns : NONE
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+bool RobotSerial::Read(string& value)
+{
+    SET_DEBUG_STACK;
+    CLogger *pLog = CLogger::GetThis();
+    char input[512];
+    int rv;
+
+    if (fSerialPortFd>=0)
+    {
+	memset(input, 0, sizeof(input));
+	/*
+	 * rv is the number of bytes read. 
+	 * it is very odd that while the return value is specified as
+	 * size_t, error is given by -1. Seems at odds with each other. 
+	 * I've given rv the cast of int to deal with this. 
+	 */
+	rv = read(fSerialPortFd, input, sizeof(input));
+	if (rv>0)
+	{
+	    value = input;
+	    if (pLog->CheckVerbose(0))
+	    {
+		pLog->LogTime("Robot::Read - %d, %s", rv, value.c_str());
+	    }
+	    return true;
+	}
+	else
+	{
+	    value.clear();
+	}
+    }
+    return false;
+}
+
 /**
  ******************************************************************
  *
