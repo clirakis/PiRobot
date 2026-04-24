@@ -340,20 +340,33 @@ static bool SendHeartBeat(TCPConnection *Rx)
 static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
 {
     SET_DEBUG_STACK;
-    string inbound;
+    const struct timespec sleeptime = { 0, 100000000};
+
     if(pR->GPSOn())
     {
-	if (pR->GetGPS()->Read(inbound))
+	string   inbound;
+	string   outbound;
+	uint32_t count = 0;
+	outbound.clear();
+	/* 
+	 * Get the pointer to the serial line the 
+	 * GPS is connected to. Read the data. 
+	 */
+	//if (pR->GetGPS()->Read(inbound))
+	while ((pR->GetGPS()->Read(inbound)) && (count<2))
 	{
 	    if (pR->DisplayOn())
 	    {
 		DisplayMessages(inbound);
 	    }
-	    WriteTCP(Rx, inbound.c_str());
-	    if (pLog->CheckVerbose(1))
-	    {
-		pLog->Log("# GPS Inbound: %s\n", inbound.c_str());
-	    }
+	    outbound.append(inbound);
+	    nanosleep(&sleeptime, NULL);
+	    count++;
+	}
+	WriteTCP(Rx, outbound.c_str());
+	if (pLog->CheckVerbose(1))
+	{
+	    pLog->Log("# GPS Inbound: %s\n", outbound.c_str());
 	}
     }
 }
