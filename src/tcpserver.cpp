@@ -301,7 +301,7 @@ static bool WriteTCP(TCPConnection *Rx, const char *line)
  *
  *******************************************************************
  */
-static bool SendHeartBeat(TCPConnection *Rx)
+static void SendHeartBeat(TCPConnection *Rx, string &out)
 {
     SET_DEBUG_STACK;
     time_t    now;
@@ -312,7 +312,8 @@ static bool SendHeartBeat(TCPConnection *Rx)
     memset(tmsg, 0, sizeof(tmsg));
     tmnow = localtime(&now);
     strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
-    return WriteTCP(Rx, line);
+    out.append(line);
+    //return WriteTCP(Rx, line);
 }
 /**
  ******************************************************************
@@ -337,7 +338,7 @@ static bool SendHeartBeat(TCPConnection *Rx)
  *
  *******************************************************************
  */
-static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
+static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &outbound)
 {
     SET_DEBUG_STACK;
     const struct timespec sleeptime = { 0, 100000000};
@@ -345,7 +346,6 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
     if(pR->GPSOn())
     {
 	string   inbound;
-	string   outbound;
 	uint32_t count = 0;
 	outbound.clear();
 	/* 
@@ -363,7 +363,7 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
 	    nanosleep(&sleeptime, NULL);
 	    count++;
 	}
-	WriteTCP(Rx, outbound.c_str());
+	//WriteTCP(Rx, outbound.c_str());
 	if (pLog->CheckVerbose(1))
 	{
 	    pLog->Log("# GPS Inbound: %s\n", outbound.c_str());
@@ -395,7 +395,7 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog)
  *
  *******************************************************************
  */
-static void SendArduino(TCPConnection *Rx, Robot *pR, CLogger *pLog)
+static void SendArduino(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &out)
 {
     SET_DEBUG_STACK;
     const string prefix("@AR:");
@@ -409,7 +409,8 @@ static void SendArduino(TCPConnection *Rx, Robot *pR, CLogger *pLog)
 	{
 	    DisplayMessages(outbound);
 	}
-	WriteTCP(Rx, outbound.c_str());
+	//WriteTCP(Rx, outbound.c_str());
+	out.append(outbound);
 	if (pLog->CheckVerbose(1))
 	{
 	    pLog->Log("# Arduino Inbound: %s\n", inbound.c_str());
@@ -447,6 +448,7 @@ void* ConnectionThread(void* arg)
     int           rc;
     char          line[512];
     time_t        now, prev;
+    string        BufferToSend;
 
     /* 
      * Seconds and microseconds timeout 
@@ -504,19 +506,22 @@ void* ConnectionThread(void* arg)
 	 *  OUTBOUND TCP data ----------------------------------------
 	 * -----------------------------------------------------------
 	 */
+	BufferToSend.clear();
 	if ((now-prev)>0)
 	{
-	    SendHeartBeat(Rx);
+	    SendHeartBeat(Rx, BufferToSend);
 	    prev = now;
 	}
 
 	/*
 	 * Any inbound traffic from the GPS
 	 */
-	SendGPS(Rx, pR, pLog);
+	SendGPS(Rx, pR, pLog, BufferToSend);
 	/* Arduino inbound */
-	SendArduino(Rx, pR, pLog);
-
+	SendArduino(Rx, pR, pLog, BufferToSend);
+	
+	// Send the bundled message
+	WriteTCP(Rx, BufferToSend.c_str());
 	nanosleep( &sleeptime, NULL);
 	time(&now);
     } // End while Rx->Run is true loop.
