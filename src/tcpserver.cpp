@@ -341,7 +341,7 @@ static void SendHeartBeat(TCPConnection *Rx, string &out)
 static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &outbound)
 {
     SET_DEBUG_STACK;
-    const struct timespec sleeptime = { 0, 100000000};
+    const struct timespec sleeptime = { 0, 200000000};
 
     if(pR->GPSOn())
     {
