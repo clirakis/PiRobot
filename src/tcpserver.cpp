@@ -349,7 +349,6 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &outboun
     {
 	string   inbound;
 	uint32_t count = 0;
-	outbound.clear();
 	/* 
 	 * Get the pointer to the serial line the 
 	 * GPS is connected to. Read the data. 
