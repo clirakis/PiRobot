@@ -189,6 +189,10 @@ int RobotSerial::SerialOpen(const char *port, speed_t BaudRate, bool Blocking)
 	     * Initialize all control characters
 	     * default values can be found in /usr/include/termios.h, 
 	     * and are given in the comments, but we don't need them here
+	     *
+	     * VMIN  Minimum number of characters to read before returning.
+	     * VTIME Timeout in deciseconds (0.1s) to wait for data before 
+	     *       returning
 	     */
 	    newtio.c_cc[VINTR]    = 0;     /* Ctrl-c */
 	    newtio.c_cc[VQUIT]    = 0;     /* Ctrl-\ */

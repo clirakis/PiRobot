@@ -353,14 +353,15 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &outboun
 	 * GPS is connected to. Read the data. 
 	 */
 	//if (pR->GetGPS()->Read(inbound))
-//	while ((pR->GetGPS()->Read(inbound)) && (count<3))
-	while ((pR->GetGPS()->Read(inbound)) && (inbound.back()!='\n'))
+	while ((pR->GetGPS()->Read(inbound)) && (count<3))
+//	while (pR->GetGPS()->Read(inbound))
 	{
 	    if (pR->DisplayOn())
 	    {
 		DisplayMessages(inbound);
 	    }
 	    outbound.append(inbound);
+	    pLog->LogTime("%d outbound: %s\n", count, outbound.c_str());
 	    nanosleep(&sleeptime, NULL);
 	    count++;
 	}
