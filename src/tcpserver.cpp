@@ -353,7 +353,7 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &outboun
 	 * GPS is connected to. Read the data. 
 	 */
 	//if (pR->GetGPS()->Read(inbound))
-	while ((pR->GetGPS()->Read(inbound)) && (count<3))
+	while ((pR->GetGPS()->Read(inbound)) && (count<4))
 //	while (pR->GetGPS()->Read(inbound))
 	{
 	    if (pR->DisplayOn())
