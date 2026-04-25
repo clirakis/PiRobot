@@ -355,7 +355,6 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &outboun
 	 */
 	//if (pR->GetGPS()->Read(inbound))
 	while ((pR->GetGPS()->Read(inbound)) && (count<4))
-//	while (pR->GetGPS()->Read(inbound))
 	{
 	    if (pR->DisplayOn())
 	    {
@@ -516,13 +515,13 @@ void* ConnectionThread(void* arg)
 	    SendHeartBeat(Rx, BufferToSend);
 	    prev = now;
 	}
-	pLog->LogTime("HB: %s", BufferToSend.c_str());
+	//pLog->LogTime("HB: %s", BufferToSend.c_str());
 
 	/*
 	 * Any inbound traffic from the GPS
 	 */
 	SendGPS(Rx, pR, pLog, BufferToSend);
-	pLog->LogTime("GPS: %s", BufferToSend.c_str());
+	//pLog->LogTime("GPS: %s", BufferToSend.c_str());
 
 	/* Arduino inbound */
 	SendArduino(Rx, pR, pLog, BufferToSend);
