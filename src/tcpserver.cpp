@@ -304,7 +304,7 @@ static bool WriteTCP(TCPConnection *Rx, const char *line)
 static void SendHeartBeat(TCPConnection *Rx, string &out)
 {
     SET_DEBUG_STACK;
-    CLogger   *pLog = CLogger::GetThis();
+    //CLogger   *pLog = CLogger::GetThis();
     time_t    now;
     struct    tm *tmnow;
     char      line[128],tmsg[64];
@@ -314,7 +314,7 @@ static void SendHeartBeat(TCPConnection *Rx, string &out)
     tmnow = localtime(&now);
     strftime(line, sizeof(line), "H: %F %T\n", tmnow); 
     out.append(line);
-    pLog->LogTime("Heartbeat: %s", out.c_str());
+    //pLog->LogTime("Heartbeat: %s", out.c_str());
     //return WriteTCP(Rx, line);
 }
 /**
@@ -517,11 +517,13 @@ void* ConnectionThread(void* arg)
 	    SendHeartBeat(Rx, BufferToSend);
 	    prev = now;
 	}
+	pLog->LogTime("HB: %s", BufferToSend.c_str());
 
 	/*
 	 * Any inbound traffic from the GPS
 	 */
 	SendGPS(Rx, pR, pLog, BufferToSend);
+	pLog->LogTime("GPS: %s", BufferToSend.c_str());
 
 	/* Arduino inbound */
 	SendArduino(Rx, pR, pLog, BufferToSend);
