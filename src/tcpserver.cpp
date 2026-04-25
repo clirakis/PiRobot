@@ -361,10 +361,10 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &outboun
 		DisplayMessages(inbound);
 	    }
 	    outbound.append(inbound);
-	    pLog->LogTime("%d outbound: %s\n", count, outbound.c_str());
 	    nanosleep(&sleeptime, NULL);
 	    count++;
 	}
+	pLog->LogTime("%d outbound: %s\n", count, outbound.c_str());
 	//WriteTCP(Rx, outbound.c_str());
 	if (pLog->CheckVerbose(1))
 	{
