@@ -353,7 +353,8 @@ static void SendGPS(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &outboun
 	 * GPS is connected to. Read the data. 
 	 */
 	//if (pR->GetGPS()->Read(inbound))
-	while ((pR->GetGPS()->Read(inbound)) && (count<2))
+//	while ((pR->GetGPS()->Read(inbound)) && (count<3))
+	while ((pR->GetGPS()->Read(inbound)) && (inbound.back()!='\n'))
 	{
 	    if (pR->DisplayOn())
 	    {
@@ -517,6 +518,9 @@ void* ConnectionThread(void* arg)
 	 * Any inbound traffic from the GPS
 	 */
 	SendGPS(Rx, pR, pLog, BufferToSend);
+
+
+
 	/* Arduino inbound */
 	SendArduino(Rx, pR, pLog, BufferToSend);
 	
