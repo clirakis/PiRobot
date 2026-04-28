@@ -16,17 +16,20 @@ TARGET = RServer
 #
 # Compile time resolution.
 #
-INCLUDE =  -I$(DRIVE)/common/utility
-LIBS = -lutility -lcurses -lconfig++
+IMU     = $(DRIVE)/Projects/RaspberryPi/PiDA/ICM-20948
+INCLUDE =  -I$(DRIVE)/common/utility -I$(DRIVE)/common/iolib \
+	-I$(IMU)
+LIBS = -lio -lutility -lcurses -lconfig++ 
+LIBS += -L$(IMU) -lIMUData
 
 # Rules to make the object files depend on the sources.
 SRC     = 
 SRCCPP  = main.cpp Robot.cpp RSdisp.cpp TCPConnection.cpp tcpserver.cpp \
-	Commands.cpp UserSignals.cpp serial.cpp
+	Commands.cpp smIPC_IMU.cpp UserSignals.cpp serial.cpp
 SRCS    = $(SRC) $(SRCCPP)
 
 HEADERS = Version.hh Robot.hh RSdisp.hh RSUtility.hh TCPConnection.hh \
-	tcpserver.hh Commands.hh UserSignals.hh serial.hh
+	tcpserver.hh smIPC_IMU.hh Commands.hh UserSignals.hh serial.hh
 
 # When we build all, what do we build?
 all:      $(TARGET)
