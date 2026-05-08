@@ -77,6 +77,7 @@ Robot::Robot(const char* ConfigFile) : CObject()
     fGPSOn          = true;
     fSerialGPS      = NULL;
     fSerialArduino  = NULL;
+    fIMU            = NULL;
 
     if(!ConfigFile)
     {
@@ -89,6 +90,18 @@ Robot::Robot(const char* ConfigFile) : CObject()
     {
 	SetError(ECONFIG_READ_FAIL,__LINE__);
 	return;
+    }
+    /* Connect to IMU shared memory if exists. */
+    fIMU = new IMU_IPC();
+    if (fIMU->CheckError())
+    {
+	Logger->Log("# Could not attach to IMU memory.\n");
+	delete fIMU;
+	fIMU = NULL;
+    }
+    else
+    {
+	Logger->Log("# Attached to IMU memory. \n");
     }
 
     /* USER POST CONFIGURATION STUFF. */
@@ -155,6 +168,7 @@ Robot::~Robot(void)
     TCPClose();
     delete fSerialGPS;
     delete fSerialArduino;
+    delete fIMU;
 
     if (fDisplay)
     {

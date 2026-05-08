@@ -23,6 +23,7 @@
 #define __ROBOT_hh_
 #  include <string>
 #  include "CObject.hh" // Base class with all kinds of intermediate
+#  include "smIPC_IMU.hh"
 
 class RobotSerial;
 
@@ -64,6 +65,7 @@ public:
 
     inline RobotSerial* GetArduino(void) {return fSerialArduino;};
     inline RobotSerial* GetGPS(void) {return fSerialGPS;};
+    inline IMU_IPC*     GetIMU_IPC(void) {return fIMU;};
 
     /**
      * Control bits - control verbosity of output
@@ -89,6 +91,9 @@ private:
 
     RobotSerial*  fSerialGPS;
     RobotSerial*  fSerialArduino;
+
+    IMU_IPC*      fIMU;
+
 
     /* Private functions. ==============================  */
 

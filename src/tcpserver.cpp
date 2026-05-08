@@ -21,6 +21,7 @@
 /* System includes. */
 #include <iostream>
 using namespace std;
+#include <iomanip>
 #include <string>
 #include <sstream>
 #include <vector> 
@@ -39,6 +40,7 @@ using namespace std;
 #include "CLogger.hh"
 #include "Robot.hh"
 #include "serial.hh"
+#include "smIPC_IMU.hh"
 
 /** Global Variables. */
 
@@ -423,6 +425,71 @@ static void SendArduino(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &out
 /**
  ******************************************************************
  *
+ * Function Name : SendIMU
+ *
+ * Description : Send the IMU data if present. 
+ *               to it and send the serial data to the client. 
+ *
+ * Inputs : TCPConnection - the client connection
+ *          Robot - Pointer to the Robot class. 
+ *          pLog  - Pointer to a logger function. 
+ *
+ * Returns : NONE
+ *
+ * Error Conditions :
+ * 
+ * Unit Tested on: 
+ *
+ * Unit Tested by: CBL
+ *
+ *
+ *******************************************************************
+ */
+static void SendIMU(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &out)
+{
+    SET_DEBUG_STACK;
+    const string prefix("@IMU:");
+    string       outbound;
+    stringstream inbound;
+
+    IMU_IPC* ptr = pR->GetIMU_IPC();
+
+    // If pointer is not null, add the data. 
+    if (ptr)
+    {
+	// Get access to the IMU Data
+	IMUData *pIMU = ptr->GetIMU();
+	/*
+	 * Format output message
+	 */
+	inbound << setprecision(10) 
+		<< "A:" << pIMU->AccX() << "," 
+		<< pIMU->AccY() << ","  
+		<< pIMU->AccZ() << ","
+		<< "G:" << pIMU->GyroX() << ","
+		<< pIMU->GyroY() << ","
+		<< pIMU->GyroZ() << ","
+		<< "M:" << pIMU->MagX() << ","
+		<< pIMU->MagY() << ","
+		<< pIMU->MagZ() << ","
+		<< "T:" << pIMU->Temp() << endl;
+
+	// add prefix
+	outbound = prefix + inbound.str();
+	if (pR->DisplayOn())
+	{
+	    DisplayMessages(outbound);
+	}
+	out.append(outbound);
+	if (pLog->CheckVerbose(1))
+	{
+	    pLog->Log("# IMU : %s\n", outbound.c_str());
+	}
+    }
+}
+/**
+ ******************************************************************
+ *
  * Function Name : ConnectionThread
  *
  * Description :
@@ -522,6 +589,8 @@ void* ConnectionThread(void* arg)
 	 */
 	SendGPS(Rx, pR, pLog, BufferToSend);
 	//pLog->LogTime("GPS: %s", BufferToSend.c_str());
+
+	SendIMU(Rx, pR, pLog, BufferToSend);
 
 	/* Arduino inbound */
 	SendArduino(Rx, pR, pLog, BufferToSend);
