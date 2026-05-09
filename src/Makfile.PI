@@ -1,0 +1,39 @@
+##################################################################
+#
+#	Makefile for RServer using gcc on Linux. 
+#
+#
+#	Modified	by	Reason
+# 	--------	--	------
+#	10-Jan-16       CBL     Original
+#	03-Jan-26	CBL	Well, long time but resuming the project
+#       09-May-26       CBL	Makefile for Raspberry Pi
+#
+######################################################################
+# Machine specific stuff
+#
+#
+TARGET = RServer
+#
+# Compile time resolution.
+#
+IMU     = $(DRIVE)/PiDA/ICM-20948
+INCLUDE =  -I$(DRIVE)/common/utility -I$(DRIVE)/common/iolib \
+	-I$(IMU)
+LIBS = -lio -lutility -lcurses -lconfig++ 
+LIBS += -L$(IMU) -lIMUData
+
+# Rules to make the object files depend on the sources.
+SRC     = 
+SRCCPP  = main.cpp Robot.cpp RSdisp.cpp TCPConnection.cpp tcpserver.cpp \
+	Commands.cpp smIPC_IMU.cpp UserSignals.cpp serial.cpp
+SRCS    = $(SRC) $(SRCCPP)
+
+HEADERS = Version.hh Robot.hh RSdisp.hh RSUtility.hh TCPConnection.hh \
+	tcpserver.hh smIPC_IMU.hh Commands.hh UserSignals.hh serial.hh
+
+# When we build all, what do we build?
+all:      $(TARGET)
+
+include $(DRIVE)/common/makefiles/makefile.inc
+
