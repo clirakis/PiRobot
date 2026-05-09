@@ -457,6 +457,7 @@ static void SendIMU(TCPConnection *Rx, Robot *pR, CLogger *pLog, string &out)
     // If pointer is not null, add the data. 
     if (ptr)
     {
+	ptr->Update();
 	// Get access to the IMU Data
 	IMUData *pIMU = ptr->GetIMU();
 	/*
