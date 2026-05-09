@@ -35,13 +35,13 @@ public:
      */
     enum {ENO_FILE=1, ECONFIG_READ_FAIL, ECONFIG_WRITE_FAIL};
     /**
-     * Constructor the lassen SK8 subsystem.
+     * Constructor 
      * All inputs are in configuration file. 
      */
     Robot(const char *ConfigFile);
 
     /**
-     * Destructor for SK8. 
+     * 
      */
     ~Robot(void);
 
@@ -62,6 +62,8 @@ public:
     inline bool DisplayOn(void) {return fDisplay;};
     inline bool GPSOn(void)     {return fGPSOn;};
     inline bool GPSToggle(void) {fGPSOn = !fGPSOn; return fGPSOn;};
+    inline bool IMUOn(void)     {return fIMUOn;};
+    inline bool IMUToggle(void) {fGPSOn = !fIMUOn; return fIMUOn;};
 
     inline RobotSerial* GetArduino(void) {return fSerialArduino;};
     inline RobotSerial* GetGPS(void) {return fSerialGPS;};
@@ -83,6 +85,7 @@ private:
     bool fRun;
     bool fDisplay;      /*! Curses display on/off. */
     bool fGPSOn;        /*! GPS transmit on/off    */
+    bool fIMUOn;        /*! get and transmit the IMU data. */
 
     /*! 
      * Configuration file name. 

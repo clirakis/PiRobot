@@ -75,6 +75,7 @@ Robot::Robot(const char* ConfigFile) : CObject()
     fDisplay        = true;
     tcpControl.Port = 9999;  // default connection port.
     fGPSOn          = true;
+    fIMUOn          = true;
     fSerialGPS      = NULL;
     fSerialArduino  = NULL;
     fIMU            = NULL;
@@ -91,17 +92,25 @@ Robot::Robot(const char* ConfigFile) : CObject()
 	SetError(ECONFIG_READ_FAIL,__LINE__);
 	return;
     }
-    /* Connect to IMU shared memory if exists. */
-    fIMU = new IMU_IPC();
-    if (fIMU->CheckError())
+
+    if(fIMUOn)
     {
-	Logger->Log("# Could not attach to IMU memory.\n");
-	delete fIMU;
-	fIMU = NULL;
+	/* Connect to IMU shared memory if exists. */
+	fIMU = new IMU_IPC();
+	if (fIMU->CheckError())
+	{
+	    Logger->Log("# Could not attach to IMU memory.\n");
+	    delete fIMU;
+	    fIMU = NULL;
+	}
+	else
+	{
+	    Logger->Log("# Attached to IMU memory. \n");
+	}
     }
     else
     {
-	Logger->Log("# Attached to IMU memory. \n");
+	Logger->Log("# IMU off. ");
     }
 
     /* USER POST CONFIGURATION STUFF. */
@@ -292,6 +301,7 @@ bool Robot::ReadConfiguration(void)
 	MM.lookupValue("ArduinoSerialPort", name2);
 	MM.lookupValue("Display",    fDisplay);
 	MM.lookupValue("GPSOn",      fGPSOn);
+	MM.lookupValue("IMUOn",      fIMUOn);
 	SetDebug(Debug); 
 	pLog->SetVerbose(Debug);
 	pLog->Log("# Debug value set to: %d\n", Debug);
@@ -361,6 +371,7 @@ bool Robot::WriteConfiguration(void)
     MM.add("Port",          Setting::TypeInt)       = tcpControl.Port;
     MM.add("Display",       Setting::TypeBoolean)   = fDisplay;
     MM.add("GPSOn",         Setting::TypeBoolean)   = fGPSOn;
+    MM.add("IMUOn",         Setting::TypeBoolean)   = fIMUOn;
     if (fGPSOn)
     {
 	MM.add("GPSSerialPort", Setting::TypeString) = fSerialGPS->PortName();
